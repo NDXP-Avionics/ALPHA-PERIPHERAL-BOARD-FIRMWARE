@@ -21,10 +21,6 @@ typedef struct
 {
     uint8_t registers[NUM_REGISTERS];
 
-    void (*cs_low)(void);
-    void (*cs_high)(void);
-    void (*delay_us)(uint32_t us);
-
     HAL_StatusTypeDef (*spi_tx)(SPI_HandleTypeDef *hspi,
                                 const uint8_t *pData,
                                 uint16_t Size,
@@ -45,11 +41,12 @@ extern "C"
 #endif
 
     void max31856_init(MAX31856_t *dev);
-    void max31856_write_register(MAX31856_t *dev, uint8_t reg, uint8_t value);
+    void max31856_write_register(MAX31856_t *dev, uint8_t reg, uint8_t value, uint8_t n);
 
-    uint32_t max31856_read_thermocouple(MAX31856_t *dev);
-    void max31856_debug_read(MAX31856_t *dev, UART_HandleTypeDef *huart);
-    double max31856_read_junction(MAX31856_t *dev, uint8_t unit);
+    uint8_t tcswitch(uint8_t n, uint8_t dir);
+
+    uint32_t max31856_read_thermocouple(MAX31856_t *dev, uint8_t n);
+    double max31856_read_junction(MAX31856_t *dev, uint8_t unit, uint8_t n);
 
 #ifdef __cplusplus
 }

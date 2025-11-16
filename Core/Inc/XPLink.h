@@ -9,7 +9,10 @@ typedef enum xp_msg_t
 {
     CMD,
     ACC,
-    TEMP,
+    TEMP1,
+    TEMP2,
+    TEMP3,
+    TEMP4,
     PRESSURE,
     FORCE,
 } xp_msg_t;

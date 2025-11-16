@@ -59,7 +59,8 @@ Core/Src/syscalls.c \
 Core/Src/MAX31856.c \
 Core/Src/dmacirc.c \
 Core/Src/XPLink.c \
-Core/Src/app_main.c
+Core/Src/app_main.c \
+Core/Src/Alpha.c
 
 # ASM sources
 ASM_SOURCES =  \

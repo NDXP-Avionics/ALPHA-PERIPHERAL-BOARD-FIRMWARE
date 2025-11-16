@@ -5,31 +5,37 @@
 #include <stdio.h>
 
 // ---------------- HELPER FUNCTIONS ----------------
-static uint32_t max31856_read32(MAX31856_t *dev)
+
+uint8_t tcswitch(uint8_t n, uint8_t dir)
 {
-    uint8_t tx_buf[4] = {0, 0, 0, 0}; // Dummy bytes to send
-    uint8_t rx_buf[4];
+    switch (n)
+    {
+    case 1:
+        HAL_GPIO_WritePin(TC1_CS_GPIO_Port, TC1_CS_Pin, dir);
+        break;
+    case 2:
+        HAL_GPIO_WritePin(TC2_CS_GPIO_Port, TC2_CS_Pin, dir);
+        break;
+    case 3:
+        HAL_GPIO_WritePin(TC3_CS_GPIO_Port, TC3_CS_Pin, dir);
+        break;
+    case 4:
+        HAL_GPIO_WritePin(TC4_CS_GPIO_Port, TC4_CS_Pin, dir);
+        break;
+    }
 
-    // Use TransmitReceive to do full-duplex SPI in one transaction
-    dev->cs_low();
-    HAL_SPI_TransmitReceive(dev->s, tx_buf, rx_buf, 4, HAL_MAX_DELAY);
-    dev->cs_high();
-
-    return ((uint32_t)rx_buf[0] << 24) |
-           ((uint32_t)rx_buf[1] << 16) |
-           ((uint32_t)rx_buf[2] << 8) |
-           (uint32_t)rx_buf[3];
+    return 0;
 }
 
-static double verify_device(MAX31856_t *dev)
+static double verify_device(MAX31856_t *dev, uint8_t n)
 {
     uint8_t tx_buf[5] = {READ_OPERATION(0), 0, 0, 0, 0};
     uint8_t rx_buf[5];
 
-    dev->cs_low();
+    tcswitch(n, 0);
     HAL_Delay(1);
     HAL_SPI_TransmitReceive(dev->s, tx_buf, rx_buf, 5, HAL_MAX_DELAY);
-    dev->cs_high();
+    tcswitch(n, 1);
 
     uint32_t data = ((uint32_t)rx_buf[1] << 24) |
                     ((uint32_t)rx_buf[2] << 16) |
@@ -54,9 +60,9 @@ static double verify_device(MAX31856_t *dev)
     for (int i = 0; i < NUM_REGISTERS; i++)
         out[1 + i] = dev->registers[i];
 
-    dev->cs_low();
+    tcswitch(n, 0);
     dev->spi_tx(dev->s, out, sizeof(out), HAL_MAX_DELAY);
-    dev->cs_high();
+    tcswitch(n, 1);
 
     return NO_MAX31856;
 }
@@ -71,26 +77,26 @@ void max31856_init(MAX31856_t *dev)
         dev->registers[i] = defaults[i];
 }
 
-void max31856_write_register(MAX31856_t *dev, uint8_t reg, uint8_t value)
+void max31856_write_register(MAX31856_t *dev, uint8_t reg, uint8_t value, uint8_t n)
 {
     if (reg >= NUM_REGISTERS)
         return;
 
     uint8_t out[2] = {WRITE_OPERATION(reg), value};
-    dev->cs_low();
+    tcswitch(n, 0);
     dev->spi_tx(dev->s, out, 2, HAL_MAX_DELAY);
-    dev->cs_high();
+    tcswitch(n, 1);
     dev->registers[reg] = value;
 }
 
-uint32_t max31856_read_thermocouple(MAX31856_t *dev)
+uint32_t max31856_read_thermocouple(MAX31856_t *dev, uint8_t n)
 {
     uint8_t tx_buf[4] = {READ_OPERATION(0x0C), 0x00, 0x00, 0x00};
     uint8_t rx_buf[4];
 
-    dev->cs_low();
+    tcswitch(n, 0);
     HAL_SPI_TransmitReceive(dev->s, tx_buf, rx_buf, 4, HAL_MAX_DELAY);
-    dev->cs_high();
+    tcswitch(n, 1);
 
     // Data is in rx_buf[1], rx_buf[2], rx_buf[3]
     uint8_t high_byte = rx_buf[1]; // MSB (LTCBH) - Register 0x0C
@@ -118,14 +124,14 @@ uint32_t max31856_read_thermocouple(MAX31856_t *dev)
     return (uint32_t)scaled;
 }
 
-double max31856_read_junction(MAX31856_t *dev, uint8_t unit)
+double max31856_read_junction(MAX31856_t *dev, uint8_t unit, uint8_t n)
 {
     uint8_t tx_buf[5] = {READ_OPERATION(8), 0, 0, 0, 0};
     uint8_t rx_buf[5];
 
-    dev->cs_low();
+    tcswitch(n, 0);
     HAL_SPI_TransmitReceive(dev->s, tx_buf, rx_buf, 5, HAL_MAX_DELAY);
-    dev->cs_high();
+    tcswitch(n, 1);
 
     // Data starts at rx_buf[1]
     uint32_t data = ((uint32_t)rx_buf[1] << 24) |
@@ -136,7 +142,7 @@ double max31856_read_junction(MAX31856_t *dev, uint8_t unit)
     if (data == 0xFFFFFFFF)
         return NO_MAX31856;
 
-    if (data == 0 && verify_device(dev) == NO_MAX31856)
+    if (data == 0 && verify_device(dev, n) == NO_MAX31856)
         return NO_MAX31856;
 
     int16_t offset = (data >> 16) & 0xFF;
