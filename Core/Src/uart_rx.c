@@ -35,6 +35,14 @@ void RX_HANDLER(Alpha *a)
             {
                 a->going = 1;
             }
+            if (pkt.data == 404)
+            {
+                HAL_GPIO_WritePin(PYRO1_GPIO_Port, PYRO1_Pin, 1);
+            }
+            if (pkt.data == 405)
+            {
+                HAL_GPIO_WritePin(PYRO1_GPIO_Port, PYRO1_Pin, 0);
+            }
         }
     }
 }

@@ -18,12 +18,7 @@ int app_main()
     ALPHA_SENSORS_INIT(&A);
     ALPHA_COMMS_INIT(&A);
 
-    HAL_GPIO_WritePin(S3_GPIO_Port, S3_Pin, 1);
-    HAL_GPIO_WritePin(S4_GPIO_Port, S4_Pin, 1);
-    HAL_GPIO_WritePin(S1_GPIO_Port, S1_Pin, 1);
-    HAL_GPIO_WritePin(S2_GPIO_Port, S2_Pin, 1);
-
-    HAL_GPIO_WritePin(PYRO1_GPIO_Port, PYRO1_Pin, 1);
+    HAL_GPIO_WritePin(PYRO1_GPIO_Port, PYRO1_Pin, 0);
 
     while (1)
     {
@@ -59,15 +54,6 @@ int app_main()
                 ALPHA_READ_TEMP(&A);
                 ALPHA_SEND_10HZ(&A);
             }
-
-            // toggle noids
-            HAL_GPIO_TogglePin(S3_GPIO_Port, S3_Pin);
-            HAL_GPIO_TogglePin(S4_GPIO_Port, S4_Pin);
-            HAL_GPIO_TogglePin(S1_GPIO_Port, S1_Pin);
-            HAL_GPIO_TogglePin(S2_GPIO_Port, S2_Pin);
-
-            // toggle pyro
-            HAL_GPIO_TogglePin(PYRO1_GPIO_Port, PYRO1_Pin);
         }
 
         // 0.75 Hz loop
