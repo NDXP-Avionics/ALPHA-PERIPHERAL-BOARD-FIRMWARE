@@ -1,6 +1,14 @@
 #include "Alpha.h"
 #include "XPLink.h"
 #include "dmacirc.h"
+#include "uart_rx.h"
+
+uint8_t ALPHA_STATE_INIT(Alpha *a)
+{
+    a->going = 1;
+
+    return 0;
+}
 
 uint8_t ALPHA_SENSORS_INIT(Alpha *a)
 {
@@ -32,6 +40,11 @@ uint8_t ALPHA_SENSORS_INIT(Alpha *a)
     max31856_write_register(&(a->tc2), 0x00, 0b10010000, 2);
     max31856_write_register(&(a->tc3), 0x00, 0b10010000, 3);
     max31856_write_register(&(a->tc4), 0x00, 0b10010000, 4);
+
+    // initialize pressure sensors
+    ads7828_init_external_ref(&(a->ads1), &hi2c1, 0x48, stm32_i2c_write, stm32_i2c_read, 5.0f);
+    ads7828_init_external_ref(&(a->ads2), &hi2c1, 0x49, stm32_i2c_write, stm32_i2c_read, 5.0f);
+
     return 0;
 }
 
@@ -40,13 +53,40 @@ uint8_t ALPHA_COMMS_INIT(Alpha *a)
     // initialize DMA
     dmasendinit(&huart1);
 
+    // initialize uart rx
+    uart_rx_init(&huart1);
+
     return 0;
 }
 
 uint8_t ALPHA_READ_TEMP(Alpha *a)
 {
+
     // read and send temp data
     a->temp_1 = max31856_read_thermocouple(&(a->tc1), 1);
+    a->temp_2 = max31856_read_thermocouple(&(a->tc2), 2);
+    a->temp_3 = max31856_read_thermocouple(&(a->tc3), 3);
+    a->temp_4 = max31856_read_thermocouple(&(a->tc4), 4);
+
+    return 0;
+}
+
+uint8_t ALPHA_READ_PRESSURE(Alpha *a)
+{
+
+    a->p1 = ads7828_read_digit(&(a->ads1), ADS7828_CHANNEL_2_COM);
+    a->p2 = ads7828_read_digit(&(a->ads1), ADS7828_CHANNEL_3_COM);
+    a->p3 = ads7828_read_digit(&(a->ads1), ADS7828_CHANNEL_4_COM);
+    a->p4 = ads7828_read_digit(&(a->ads1), ADS7828_CHANNEL_5_COM);
+    a->p5 = ads7828_read_digit(&(a->ads1), ADS7828_CHANNEL_6_COM);
+    a->p6 = ads7828_read_digit(&(a->ads1), ADS7828_CHANNEL_7_COM);
+
+    a->p7 = ads7828_read_digit(&(a->ads2), ADS7828_CHANNEL_0_COM);
+    a->p8 = ads7828_read_digit(&(a->ads2), ADS7828_CHANNEL_1_COM);
+    a->p9 = ads7828_read_digit(&(a->ads2), ADS7828_CHANNEL_2_COM);
+    a->p10 = ads7828_read_digit(&(a->ads2), ADS7828_CHANNEL_3_COM);
+    a->p11 = ads7828_read_digit(&(a->ads2), ADS7828_CHANNEL_4_COM);
+    a->p12 = ads7828_read_digit(&(a->ads2), ADS7828_CHANNEL_5_COM);
 
     return 0;
 }
@@ -56,23 +96,15 @@ uint8_t ALPHA_SEND_10HZ(Alpha *a)
     // send all temp data
     xp_packet_t pkt1;
     pkt1.data = (uint64_t)(a->temp_1);
-    pkt1.end_byte = 0x00;
-    pkt1.sender_id = 0x33;
     pkt1.type = TEMP1;
     xp_packet_t pkt2;
     pkt2.data = (uint64_t)(a->temp_2);
-    pkt2.end_byte = 0x00;
-    pkt2.sender_id = 0x33;
     pkt2.type = TEMP2;
     xp_packet_t pkt3;
     pkt3.data = (uint64_t)(a->temp_3);
-    pkt3.end_byte = 0x00;
-    pkt3.sender_id = 0x33;
     pkt3.type = TEMP3;
     xp_packet_t pkt4;
-    pkt4.data = (uint64_t)(a->temp_1);
-    pkt4.end_byte = 0x00;
-    pkt4.sender_id = 0x33;
+    pkt4.data = (uint64_t)(a->temp_4);
     pkt4.type = TEMP4;
 
     uint8_t packet[12];
@@ -85,6 +117,43 @@ uint8_t ALPHA_SEND_10HZ(Alpha *a)
     dmasend(packet, 12);
     XPLINK_PACK(packet, &pkt4);
     dmasend(packet, 12);
+
+    return 0;
+}
+
+uint8_t Alpha_Send_100HZ(Alpha *a)
+{
+    uint16_t vals[] = {a->p1,
+                       a->p2,
+                       a->p3,
+                       a->p4,
+                       a->p5,
+                       a->p6,
+                       a->p7,
+                       a->p8,
+                       a->p9,
+                       a->p10,
+                       a->p11,
+                       a->p12};
+
+    for (int i = 0; i < 12; i++)
+    {
+        xp_packet_t pkt;
+        pkt.data = vals[i];
+        pkt.type = PRESSURE1 + i;
+
+        uint8_t packet[12];
+
+        XPLINK_PACK(packet, &pkt);
+        dmasend(packet, 12);
+    }
+
+    return 0;
+}
+
+uint8_t ALPHA_RX(Alpha *a)
+{
+    RX_HANDLER(a);
 
     return 0;
 }

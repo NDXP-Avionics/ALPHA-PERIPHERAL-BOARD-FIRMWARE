@@ -1,7 +1,7 @@
 #include "dmacirc.h"
 #include <string.h>
 
-#define TX_QUEUE_LEN 24 // 16
+#define TX_QUEUE_LEN 256
 #define TX_ITEM_SIZE 36
 
 // tx item

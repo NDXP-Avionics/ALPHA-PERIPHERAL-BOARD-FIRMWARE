@@ -13,7 +13,18 @@ typedef enum xp_msg_t
     TEMP2,
     TEMP3,
     TEMP4,
-    PRESSURE,
+    PRESSURE1,
+    PRESSURE2,
+    PRESSURE3,
+    PRESSURE4,
+    PRESSURE5,
+    PRESSURE6,
+    PRESSURE7,
+    PRESSURE8,
+    PRESSURE9,
+    PRESSURE10,
+    PRESSURE11,
+    PRESSURE12,
     FORCE,
 } xp_msg_t;
 
@@ -22,7 +33,6 @@ typedef struct xp_packet_t
     xp_msg_t type;
     uint64_t data;
     uint8_t sender_id;
-    uint8_t end_byte;
 
 } xp_packet_t;
 

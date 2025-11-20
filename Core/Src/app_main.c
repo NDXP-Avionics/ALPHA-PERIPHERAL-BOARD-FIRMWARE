@@ -14,19 +14,36 @@ int app_main()
     // initialize alpha
     Alpha A;
 
+    ALPHA_STATE_INIT(&A);
     ALPHA_SENSORS_INIT(&A);
     ALPHA_COMMS_INIT(&A);
+
+    HAL_GPIO_WritePin(S3_GPIO_Port, S3_Pin, 1);
+    HAL_GPIO_WritePin(S4_GPIO_Port, S4_Pin, 1);
+    HAL_GPIO_WritePin(S1_GPIO_Port, S1_Pin, 1);
+    HAL_GPIO_WritePin(S2_GPIO_Port, S2_Pin, 1);
+
+    HAL_GPIO_WritePin(PYRO1_GPIO_Port, PYRO1_Pin, 1);
 
     while (1)
     {
 
-        // 20 Hz loop
-        if (HAL_GetTick() - last_t1 > 50)
+        // 100 Hz loop
+        if (HAL_GetTick() - last_t1 > 10)
         {
             // reset timer
             last_t1 = HAL_GetTick();
-
             HAL_GPIO_TogglePin(LED3_GPIO_Port, LED3_Pin);
+
+            // check rx
+            ALPHA_RX(&A);
+
+            if (A.going)
+            {
+                // Pressure Sensors
+                ALPHA_READ_PRESSURE(&A);
+                Alpha_Send_100HZ(&A);
+            }
         }
 
         // 10 Hz loop
@@ -36,10 +53,21 @@ int app_main()
             last_t2 = HAL_GetTick();
             HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
 
-            // read sensors
-            ALPHA_READ_TEMP(&A);
+            if (A.going)
+            {
+                // read sensors
+                ALPHA_READ_TEMP(&A);
+                ALPHA_SEND_10HZ(&A);
+            }
 
-            ALPHA_SEND_10HZ(&A);
+            // toggle noids
+            HAL_GPIO_TogglePin(S3_GPIO_Port, S3_Pin);
+            HAL_GPIO_TogglePin(S4_GPIO_Port, S4_Pin);
+            HAL_GPIO_TogglePin(S1_GPIO_Port, S1_Pin);
+            HAL_GPIO_TogglePin(S2_GPIO_Port, S2_Pin);
+
+            // toggle pyro
+            HAL_GPIO_TogglePin(PYRO1_GPIO_Port, PYRO1_Pin);
         }
 
         // 0.75 Hz loop
