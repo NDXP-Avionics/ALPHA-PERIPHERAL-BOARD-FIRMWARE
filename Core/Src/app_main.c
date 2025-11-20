@@ -37,6 +37,7 @@ int app_main()
             {
                 // Pressure Sensors
                 ALPHA_READ_PRESSURE(&A);
+                ALPHA_READ_LOADCELL(&A);
                 Alpha_Send_100HZ(&A);
             }
         }
@@ -53,6 +54,7 @@ int app_main()
                 // read sensors
                 ALPHA_READ_TEMP(&A);
                 ALPHA_SEND_10HZ(&A);
+                ALPHA_READ_LOADCELL(&A); 
             }
         }
 
