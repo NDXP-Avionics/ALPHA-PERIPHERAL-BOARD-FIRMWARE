@@ -157,3 +157,135 @@ uint8_t ALPHA_RX(Alpha *a)
 
     return 0;
 }
+uint8_t ALPHA_CHECK_SAFETY(Alpha *a)
+{
+
+    // Add safety checks here
+    uint8_t safety_ok =1;
+    return safety_ok;
+}
+
+uint8_t ALPHA_CONTROL_VALVES (Alpha *a,uint8_t valve_state)
+{
+
+    // Add valve state control logic/open and close logic 
+}
+
+uint8_t ALPHA_STATE_MACHINE(Alpha *a)
+{
+    //REad keyswitches
+    uint8_t key1=HAL_GPIO_ReadPin(K1_GPIO_Port,K1_Pin);
+    //Add other keyswitch???
+
+    a->both_keys_pressed=(key1==GPIO_PIN_SET) && (key2=GPIO_PIN_SET);
+
+    //check for safety conditions 
+    uint8_t safety_ok = ALPHA_CHECK_SAFETY(a);
+
+    // Check time limit 
+    if (HAL_GetTick() -a->mission_start_time>MAX_MISSION_TIME_MS){
+
+       a->time_limit_exceeded =1;
+
+    }
+    //Check Burn wire Status 
+    a->burn_wire_cut= ALPHA_CHECK_BURN_WIRE(a);
+     
+    switch(a->current_state) {
+        case STATE_TESTING_FILL:
+            //Send sensor data
+            //Check for inoming serial commands 
+            if (a->both_keys_pressed && a->ignition_serial_recieved)
+            {
+                a->current_state=STATE_IGNTTION;
+                a->igntition_start_time=HAL_GetTick();
+                a->HIGH_RATE_LOGGING =1;
+            
+            }
+            // Safety abort
+            if (!safety_ok)
+            {
+                a->current_state=STATE_POWER_OFF;
+            }
+            break;
+        case STATE_IGNTTION:
+            //Begin high rate data logging 
+            a-> high_rate_logging=1;
+
+            //Add logic to fire pyro (Not sure how this links in with communication)
+
+            if (a->burn_wire_cut)
+            {
+                a->current_state=STATE_BURN_WIRE_CUT;
+                a->steady_start_time=HAL_GetTick();
+            }
+            if (!safety_ok)
+            {
+                a->current_state=STATE_POWER_OFF;
+                HAL_GPIO_WritePin(POWER_GPIO_Port, POWER_Pin, GPIO_PIN_RESET);
+            }
+            break;
+        }
+        case STATE_BURN_WIRE_CUT:
+            //Continue high rate data logging 
+            if (a->time_limit_exceeded)
+            {
+                a->current_state=STATE_SHUTDOWN;
+                a->shutdown_start_time=HAL_GetTick();
+            } else {
+                a->current_state=STATE_STEADY_STATE;
+            /// THIS DOES NOT PROPERLY SHUTDOWN IN CASE OF FAILED IGNTION 
+            }
+            break;
+        case STATE_STEADY_STATE:
+             // TODO: Indicate steady state with LED
+            // HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
+            
+            // TODO: Define what satisfies the shutdown timer
+            // Example: run for certain duration in steady state
+            if (HAL_GetTick()-a->steady_state_timer > SHUTDOWN_WAIT_TIME_MS)
+            {
+                a->shutdown_timer_satisfied = 1;
+            }
+            if (a->shutdown_timer_satisfied)
+            {
+                a->current_state=STATE_SHUTDOWN;
+                a->shutdown_start_time=HAL_GetTick();
+            }
+
+            //safety abort 
+            if (!safety_ok {
+                a->current_state=STATE_POWER_OFF;
+                
+            }
+            break;
+        case STATE_SHUTDOWN:
+            // Continue logging data
+            //CLose all valves
+            ALPHA_CONTROL_VALVES(a,0);
+
+            // Disable pyro 
+            HAL_GPIO_WritePin(POWER_GPIO_Port, POWER_Pin, GPIO_PIN_RESET);
+
+            uint8_t wait_complete=0;
+            if (HAL_GetTick()-a->sthudown_start_time > SHUTDOWN_WAIT_TIME_MS){
+                wait_complete=1;
+            }
+
+            if (wait_complete){
+                a->current_state=STATE_POWER_OFF;
+            }
+            break;
+        case STATE_POWER_OFF:
+             a->high_rate_logging=0;
+             a->going=0;
+
+             ALPHA_CONTROL_VALVES(a,0);
+             HAL_GPIO_WritePin(PYRO1_GPIO_Port, PYRO1_Pin, GPIO_PIN_RESET);
+             break;
+    }       
+
+
+    return 0;      
+        )
+}

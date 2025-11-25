@@ -20,9 +20,19 @@ int app_main()
 
     HAL_GPIO_WritePin(PYRO1_GPIO_Port, PYRO1_Pin, 0);
 
+    // Initialize state machine
+    A.current_state = STATE_TESTING_FILL;
+    A.mission_start_time = HAL_GetTick();
+    A.high_rate_logging = 0;
+    A.ignition_serial_received = 0;
+    A.burn_wire_cut = 0;
+    A.shutdown_timer_satisfied = 0;
+    A.time_limit_exceeded = 0;
+    
     while (1)
     {
-
+        // Run state machine
+        ALPHA_STATE_MACHINE(&A);
         // 100 Hz loop
         if (HAL_GetTick() - last_t1 > 10)
         {
@@ -32,6 +42,13 @@ int app_main()
 
             // check rx
             ALPHA_RX(&A);
+            //only send higgh rate data when logging is active 
+            if (A.going&& A.high_rate_logging)
+            {
+                // Temp Sensors
+                ALPHA_READ_TEMP(&A);
+                Alpha_Send_100HZ(&A);
+            }
 
             if (A.going)
             {

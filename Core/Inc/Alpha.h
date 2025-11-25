@@ -5,6 +5,46 @@
 #include "MAX31856.h"
 #include "ADS7828.h"
 
+// State enumeration 
+typedef enum {
+    STATE_TESTING_FILL,
+    STATE_IGNTTION,
+    STATE_BURN_WIRE_CUT,
+    STATE_STEADY_STATE,
+    STATE_SHUTDOWN,
+    STATE_POWER_OFF
+} AlphaState;
+
+#define MAX_MISSION_TIME_MS 50000
+
+# define SHUTDOWN_WAIT_TIME_MS 600000
+
+typedef struct {
+
+    AlphaState current_state;
+    uint32_t mission_start_time;
+    uint32_t igntition_start_time;
+    uint32_t steady_start_time;
+    uint32_t shutdown_start_time;
+    uint8_t both_keys_pressed;
+    uint8_t ignition_serial_recieved;
+    uint8_t burn_wire_cut;
+    uint8_t shutdown_timer_satisfied;
+    uint8_t time_limit_exceeded
+
+    // Sensor streaming control
+    uint8_t high_rate_logging;
+
+} Alpha ;
+
+//Function Prototypes
+
+uint8-t ALPHA_STATE_MACHINE(Alpha *a);
+uint8_t ALPHA_CHECK_SAFETY(Alpha *a);
+uint8_t ALPHA_CONTROL_VALVES(Alpha *a, uint8_t valve_state);
+uint8_t ALPHA_CHECK_BURN_WIRE(Alpha *a);
+
+
 typedef struct
 {
 
