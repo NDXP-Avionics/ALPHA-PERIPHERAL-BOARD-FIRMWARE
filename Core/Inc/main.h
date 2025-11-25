@@ -87,10 +87,10 @@ void Error_Handler(void);
 #define S4_GPIO_Port GPIOB
 #define PYRO1_Pin GPIO_PIN_8
 #define PYRO1_GPIO_Port GPIOA
-#define LC_SCLK_Pin GPIO_PIN_11
-#define LC_SCLK_GPIO_Port GPIOA
-#define LC_DRDY_DOUT_Pin GPIO_PIN_12
+#define LC_DRDY_DOUT_Pin GPIO_PIN_11
 #define LC_DRDY_DOUT_GPIO_Port GPIOA
+#define LC_SCLK_Pin GPIO_PIN_12
+#define LC_SCLK_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 

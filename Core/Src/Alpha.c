@@ -7,6 +7,11 @@ uint8_t ALPHA_STATE_INIT(Alpha *a)
 {
     a->going = 1;
 
+    a->s1 = 0;
+    a->s2 = 0;
+    a->s3 = 0;
+    a->s4 = 0;
+
     return 0;
 }
 
@@ -46,14 +51,15 @@ uint8_t ALPHA_SENSORS_INIT(Alpha *a)
     ads7828_init_external_ref(&(a->ads2), &hi2c1, 0x49, stm32_i2c_write, stm32_i2c_read, 5.0f);
 
     // initialize Load Cell
-    ADS1231_Init(&(a->load_cell), 
-                 LC_SCLK_GPIO_Port, LC_SCLK_Pin,      // Clock pin
-                 LC_DRDY_DOUT_GPIO_Port, LC_DRDY_DOUT_Pin);  // Data pin
-    if (ADS1231_Begin(&(a->load_cell)) != ADS1231_SUCCESS) {
+    ADS1231_Init(&(a->load_cell),
+                 LC_SCLK_GPIO_Port, LC_SCLK_Pin,            // Clock pin
+                 LC_DRDY_DOUT_GPIO_Port, LC_DRDY_DOUT_Pin); // Data pin
+    if (ADS1231_Begin(&(a->load_cell)) != ADS1231_SUCCESS)
+    {
         // Handle initialization error if needed
         // Could set an error flag or halt
     }
-    a->load_cell_value = 0;  // Initialize reading to 0
+    a->load_cell_value = 0; // Initialize reading to 0
 
     return 0;
 }
@@ -101,20 +107,25 @@ uint8_t ALPHA_READ_PRESSURE(Alpha *a)
     return 0;
 }
 
-
 uint8_t ALPHA_READ_LOADCELL(Alpha *a)
 {
+
+    if (!ADS1231_IsReady(&(a->load_cell)))
+    {
+        return 0;
+    }
+
     int32_t value = 0;
     int8_t result = ADS1231_GetValue(&(a->load_cell), &value);
-    
-    if (result == ADS1231_SUCCESS) {
+
+    if (result == ADS1231_SUCCESS)
+    {
         a->load_cell_value = value;
-    } else {
     }
-    
+
     return result;
 }
-/* END OF NEW FUNCTION */
+
 uint8_t ALPHA_SEND_10HZ(Alpha *a)
 {
     // send all temp data
@@ -148,7 +159,7 @@ uint8_t ALPHA_SEND_10HZ(Alpha *a)
 uint8_t Alpha_Send_100HZ(Alpha *a)
 {
 
-    //send pressure data
+    // send pressure data
     uint16_t vals[] = {a->p1,
                        a->p2,
                        a->p3,
@@ -174,13 +185,47 @@ uint8_t Alpha_Send_100HZ(Alpha *a)
         dmasend(packet, 12);
     }
 
-    //send load cell data
+    // send load cell data
     xp_packet_t pkt_lc;
     pkt_lc.data = (uint64_t)(a->load_cell_value);
     pkt_lc.type = THRUST;
     uint8_t packet[12];
     XPLINK_PACK(packet, &pkt_lc);
     dmasend(packet, 12);
+
+    // send solenoid data
+    xp_packet_t pkt_s;
+    pkt_s.data = a->s1 << 24 | a->s2 << 16 | a->s3 << 8 | a->s4;
+    pkt_s.type = SOLENOID;
+    XPLINK_PACK(packet, &pkt_s);
+    dmasend(packet, 12);
+
+    return 0;
+}
+
+uint8_t ALPHA_SET_SOLENOID(Alpha *a, uint8_t s, uint8_t val)
+{
+    switch (s)
+    {
+    case 1:
+        a->s1 = val;
+        HAL_GPIO_WritePin(S1_GPIO_Port, S1_Pin, val);
+        break;
+    case 2:
+        a->s2 = val;
+        HAL_GPIO_WritePin(S2_GPIO_Port, S2_Pin, val);
+        break;
+    case 3:
+        a->s3 = val;
+        HAL_GPIO_WritePin(S3_GPIO_Port, S3_Pin, val);
+        break;
+    case 4:
+        a->s4 = val;
+        HAL_GPIO_WritePin(S4_GPIO_Port, S4_Pin, val);
+        break;
+    default:
+        return 1; // Error
+    }
 
     return 0;
 }

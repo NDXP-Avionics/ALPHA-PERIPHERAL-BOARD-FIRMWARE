@@ -362,7 +362,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOC, LED1_Pin | LED2_Pin | LED3_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, TC4_CS_Pin | TC3_CS_Pin | DIR_RS485_Pin | PYRO1_Pin | LC_SCLK_Pin | LC_DRDY_DOUT_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, TC4_CS_Pin | TC3_CS_Pin | DIR_RS485_Pin | PYRO1_Pin | LC_SCLK_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, TC1_CS_Pin | TC2_CS_Pin | S1_Pin | S2_Pin | S3_Pin | S4_Pin, GPIO_PIN_RESET);
@@ -381,8 +381,8 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(K1_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : TC4_CS_Pin TC3_CS_Pin DIR_RS485_Pin PYRO1_Pin
-                           LC_SCLK_Pin LC_DRDY_DOUT_Pin */
-  GPIO_InitStruct.Pin = TC4_CS_Pin | TC3_CS_Pin | DIR_RS485_Pin | PYRO1_Pin | LC_SCLK_Pin | LC_DRDY_DOUT_Pin;
+                           LC_SCLK_Pin */
+  GPIO_InitStruct.Pin = TC4_CS_Pin | TC3_CS_Pin | DIR_RS485_Pin | PYRO1_Pin | LC_SCLK_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -401,6 +401,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(BW1_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : LC_DRDY_DOUT_Pin */
+  GPIO_InitStruct.Pin = LC_DRDY_DOUT_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(LC_DRDY_DOUT_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure peripheral I/O remapping */
   __HAL_AFIO_REMAP_PD01_ENABLE();
