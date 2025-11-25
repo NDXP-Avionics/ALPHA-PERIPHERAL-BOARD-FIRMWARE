@@ -16,9 +16,9 @@ int app_main()
 
     ALPHA_STATE_INIT(&A);
     ALPHA_SENSORS_INIT(&A);
-    ALPHA_COMMS_INIT(&A);
 
-    HAL_GPIO_WritePin(PYRO1_GPIO_Port, PYRO1_Pin, 0);
+    // wait to init comms
+    ALPHA_COMMS_INIT(&A);
 
     while (1)
     {
@@ -37,6 +37,7 @@ int app_main()
             {
                 // Pressure Sensors
                 ALPHA_READ_PRESSURE(&A);
+                ALPHA_READ_LOADCELL(&A);
                 Alpha_Send_100HZ(&A);
             }
         }
@@ -50,8 +51,9 @@ int app_main()
 
             if (A.going)
             {
-                // read sensors
+                // Read sensors
                 ALPHA_READ_TEMP(&A);
+                // Send Data
                 ALPHA_SEND_10HZ(&A);
             }
         }

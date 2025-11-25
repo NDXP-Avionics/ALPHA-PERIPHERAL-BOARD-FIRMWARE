@@ -25,7 +25,8 @@ typedef enum xp_msg_t
     PRESSURE10,
     PRESSURE11,
     PRESSURE12,
-    FORCE,
+    THRUST,
+    SOLENOID,
 } xp_msg_t;
 
 typedef struct xp_packet_t

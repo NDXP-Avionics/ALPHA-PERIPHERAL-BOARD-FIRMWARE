@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include "MAX31856.h"
 #include "ADS7828.h"
-
+#include "ADS1231.h"
 typedef struct
 {
 
@@ -38,6 +38,16 @@ typedef struct
     uint16_t p11;
     uint16_t p12;
 
+    // load cell
+    ADS1231_t load_cell;
+    int32_t load_cell_value;
+
+    // solenoids
+    uint8_t s1;
+    uint8_t s2;
+    uint8_t s3;
+    uint8_t s4;
+
     // state variables
     uint8_t going;
 
@@ -57,9 +67,13 @@ uint8_t ALPHA_READ_TEMP(Alpha *a);
 
 uint8_t ALPHA_READ_PRESSURE(Alpha *a);
 
+uint8_t ALPHA_READ_LOADCELL(Alpha *a);
+
 uint8_t ALPHA_SEND_10HZ(Alpha *a);
 
 uint8_t Alpha_Send_100HZ(Alpha *a);
+
+uint8_t ALPHA_SET_SOLENOID(Alpha *a, uint8_t s, uint8_t val);
 
 uint8_t ALPHA_RX(Alpha *a);
 

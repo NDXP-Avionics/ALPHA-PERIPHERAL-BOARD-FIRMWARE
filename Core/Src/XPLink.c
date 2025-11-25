@@ -2,8 +2,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#define BUFFERSIZE 255
+
 // vars for unpacking
-static uint8_t BUFFER[256];
+static uint8_t BUFFER[BUFFERSIZE];
 static uint8_t BUFF_HEAD = 0;
 static uint8_t PREV_END = 0;
 
@@ -57,6 +59,13 @@ int XPLINK_PACK(uint8_t *output, xp_packet_t *xppack)
 
 uint8_t XPLINK_UNPACK(xp_packet_t *output, uint8_t byte)
 {
+
+    // prevent buffer overflow
+    if (BUFF_HEAD >= BUFFERSIZE)
+    {
+        BUFF_HEAD = 0;
+        PREV_END = 0;
+    }
 
     // check for start of new packet
     if (PREV_END)
