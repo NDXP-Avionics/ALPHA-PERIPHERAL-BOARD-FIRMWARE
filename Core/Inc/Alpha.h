@@ -5,6 +5,17 @@
 #include "MAX31856.h"
 #include "ADS7828.h"
 #include "ADS1231.h"
+#include "BNO055.h"
+
+typedef struct rotation
+{
+
+    int16_t x;
+    int16_t y;
+    int16_t z;
+
+} rotation;
+
 typedef struct
 {
 
@@ -48,6 +59,10 @@ typedef struct
     uint8_t s3;
     uint8_t s4;
 
+    // accelerometer
+    struct bno055_t bno055;
+    rotation rot;
+
     // state variables
     uint8_t going;
 
@@ -68,6 +83,8 @@ uint8_t ALPHA_READ_TEMP(Alpha *a);
 uint8_t ALPHA_READ_PRESSURE(Alpha *a);
 
 uint8_t ALPHA_READ_LOADCELL(Alpha *a);
+
+uint8_t ALPHA_READ_ACC(Alpha *a);
 
 uint8_t ALPHA_SEND_10HZ(Alpha *a);
 

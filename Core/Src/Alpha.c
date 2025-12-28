@@ -61,6 +61,34 @@ uint8_t ALPHA_SENSORS_INIT(Alpha *a)
     }
     a->load_cell_value = 0; // Initialize reading to 0
 
+    // initialize BNO055
+    a->bno055.bus_read = STM32_BUS_READ;
+    a->bno055.bus_write = STM32_BUS_WRITE;
+    a->bno055.dev_addr = BNO055_I2C_ADDR1;
+    a->bno055.delay_msec = STM32_DELAY_MSEC;
+
+    if (bno055_init(&(a->bno055)) != BNO055_SUCCESS)
+    {
+        while (1)
+        {
+            HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, 0);
+            HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 1);
+            HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, 1);
+        }
+    }
+
+    HAL_Delay(650);
+
+    bno055_set_operation_mode(BNO055_OPERATION_MODE_CONFIG);
+
+    HAL_Delay(100);
+
+    bno055_set_power_mode(BNO055_POWER_MODE_NORMAL);
+    HAL_Delay(100);
+
+    bno055_set_operation_mode(BNO055_OPERATION_MODE_NDOF);
+    HAL_Delay(100);
+
     return 0;
 }
 
@@ -126,6 +154,28 @@ uint8_t ALPHA_READ_LOADCELL(Alpha *a)
     return result;
 }
 
+uint8_t ALPHA_READ_ACC(Alpha *a) // Still named ACC in your code
+{
+    struct bno055_euler_t euler;
+
+    if (bno055_read_euler_hrp(&euler) != BNO055_SUCCESS)
+    {
+        // Mark as error
+        a->rot.x = 0xAAAA;
+        a->rot.y = 0xAAAA;
+        a->rot.z = 0xAAAA;
+        return 1;
+    }
+    else
+    {
+        a->rot.x = euler.h;
+        a->rot.y = euler.r;
+        a->rot.z = euler.p;
+    }
+
+    return 0;
+}
+
 uint8_t ALPHA_SEND_10HZ(Alpha *a)
 {
     // send all temp data
@@ -151,6 +201,19 @@ uint8_t ALPHA_SEND_10HZ(Alpha *a)
     XPLINK_PACK(packet, &pkt3);
     dmasend(packet, 12);
     XPLINK_PACK(packet, &pkt4);
+    dmasend(packet, 12);
+
+    // send accelerometer data
+
+    xp_packet_t pkt = {0};
+
+    pkt.data = ((uint64_t)(uint16_t)a->rot.x << 32) |
+               ((uint64_t)(uint16_t)a->rot.y << 16) |
+               ((uint64_t)(uint16_t)a->rot.z);
+
+    pkt.type = ACC;
+
+    XPLINK_PACK(packet, &pkt);
     dmasend(packet, 12);
 
     return 0;

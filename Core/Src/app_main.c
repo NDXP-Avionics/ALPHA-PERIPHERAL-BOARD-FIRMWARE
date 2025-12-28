@@ -14,6 +14,8 @@ int app_main()
     // initialize alpha
     Alpha A;
 
+    HAL_Delay(1000);
+
     ALPHA_STATE_INIT(&A);
     ALPHA_SENSORS_INIT(&A);
 
@@ -53,6 +55,7 @@ int app_main()
             {
                 // Read sensors
                 ALPHA_READ_TEMP(&A);
+                ALPHA_READ_ACC(&A);
                 // Send Data
                 ALPHA_SEND_10HZ(&A);
             }

@@ -64,7 +64,8 @@ Core/Src/Alpha.c \
 Core/Src/ADS7828.c \
 Core/Src/byte_queue.c \
 Core/Src/uart_rx.c \
-Core/Src/ADS1231.c
+Core/Src/ADS1231.c \
+Core/Src/BNO055.c \
 
 # ASM sources
 ASM_SOURCES =  \
