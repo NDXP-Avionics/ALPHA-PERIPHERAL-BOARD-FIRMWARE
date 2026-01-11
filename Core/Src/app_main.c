@@ -1,6 +1,5 @@
 #include "stm32f103xb.h"
 #include "app_main.h"
-
 #include "Alpha.h"
 
 int app_main()

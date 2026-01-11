@@ -1,3 +1,5 @@
+// By: Luke Scholler and Sebastian Brock
+
 #include "Alpha.h"
 #include "XPLink.h"
 #include "dmacirc.h"
