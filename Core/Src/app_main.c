@@ -32,17 +32,20 @@ int app_main()
             // check rx
             ALPHA_RX(&A);
 
-            // run state machine
-            SM_ADVANCE_STATE(&A);
-
             if (A.going)
             {
-                // Pressure Sensors
+                // Read Pressure Sensors
                 ALPHA_READ_PRESSURE(&A);
+                // Read Load Cell
                 ALPHA_READ_LOADCELL(&A);
+                // Read Accelerometer
                 ALPHA_READ_ACC(&A);
+                // Send all 100HZ data
                 Alpha_Send_100HZ(&A);
             }
+
+            // run state machine
+            SM_ADVANCE_STATE(&A);
         }
 
         // 10 Hz loop

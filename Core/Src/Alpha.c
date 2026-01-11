@@ -105,6 +105,8 @@ uint8_t ALPHA_SET_PYRO(Alpha *a, uint8_t val)
 {
     HAL_GPIO_WritePin(PYRO1_GPIO_Port, PYRO1_Pin, val);
     a->pyro1 = val;
+
+    return 0;
 }
 
 uint8_t ALPHA_READ_TEMP(Alpha *a)
@@ -142,11 +144,15 @@ uint8_t ALPHA_READ_PRESSURE(Alpha *a)
 uint8_t ALPHA_READ_KEYS(Alpha *a)
 {
     a->k1 = HAL_GPIO_ReadPin(K1_GPIO_Port, K1_Pin);
+
+    return 0;
 }
 
 uint8_t ALPHA_READ_BW(Alpha *a)
 {
     a->bw1 = HAL_GPIO_ReadPin(BW1_GPIO_Port, BW1_Pin);
+
+    return 0;
 }
 
 uint8_t ALPHA_READ_LOADCELL(Alpha *a)
@@ -221,6 +227,9 @@ uint8_t ALPHA_SEND_10HZ(Alpha *a)
     xp_packet_t pkt;
     pkt.data = a->k1 << 8 | a->bw1;
     pkt.type = SWITCHES;
+
+    XPLINK_PACK(packet, &pkt);
+    dmasend(packet, 12);
 
     return 0;
 }

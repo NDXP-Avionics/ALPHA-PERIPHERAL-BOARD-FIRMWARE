@@ -1,6 +1,8 @@
 #ifndef STATE_MACHINE_H
 #define STATE_MACHINE_H
 
+#include <stdint.h>
+
 typedef struct Alpha Alpha;
 
 typedef enum STATE
