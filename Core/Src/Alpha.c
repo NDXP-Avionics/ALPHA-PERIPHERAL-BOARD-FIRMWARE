@@ -2,6 +2,7 @@
 #include "XPLink.h"
 #include "dmacirc.h"
 #include "uart_rx.h"
+#include "state_machine.h"
 
 uint8_t ALPHA_STATE_INIT(Alpha *a)
 {
@@ -11,6 +12,8 @@ uint8_t ALPHA_STATE_INIT(Alpha *a)
     a->s2 = 0;
     a->s3 = 0;
     a->s4 = 0;
+
+    SM_SET_STATE(a, STANDBY);
 
     return 0;
 }
@@ -67,27 +70,22 @@ uint8_t ALPHA_SENSORS_INIT(Alpha *a)
     a->bno055.dev_addr = BNO055_I2C_ADDR1;
     a->bno055.delay_msec = STM32_DELAY_MSEC;
 
-    if (bno055_init(&(a->bno055)) != BNO055_SUCCESS)
+    HAL_Delay(1000);
+
+    if (bno055_init(&(a->bno055)) == BNO055_SUCCESS)
     {
-        while (1)
-        {
-            HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, 0);
-            HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 1);
-            HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, 1);
-        }
+        HAL_Delay(500);
+
+        bno055_set_operation_mode(BNO055_OPERATION_MODE_CONFIG);
+
+        HAL_Delay(100);
+
+        bno055_set_power_mode(BNO055_POWER_MODE_NORMAL);
+        HAL_Delay(100);
+
+        bno055_set_operation_mode(BNO055_OPERATION_MODE_NDOF);
+        HAL_Delay(100);
     }
-
-    HAL_Delay(650);
-
-    bno055_set_operation_mode(BNO055_OPERATION_MODE_CONFIG);
-
-    HAL_Delay(100);
-
-    bno055_set_power_mode(BNO055_POWER_MODE_NORMAL);
-    HAL_Delay(100);
-
-    bno055_set_operation_mode(BNO055_OPERATION_MODE_NDOF);
-    HAL_Delay(100);
 
     return 0;
 }
@@ -101,6 +99,12 @@ uint8_t ALPHA_COMMS_INIT(Alpha *a)
     uart_rx_init(&huart1);
 
     return 0;
+}
+
+uint8_t ALPHA_SET_PYRO(Alpha *a, uint8_t val)
+{
+    HAL_GPIO_WritePin(PYRO1_GPIO_Port, PYRO1_Pin, val);
+    a->pyro1 = val;
 }
 
 uint8_t ALPHA_READ_TEMP(Alpha *a)
@@ -133,6 +137,16 @@ uint8_t ALPHA_READ_PRESSURE(Alpha *a)
     a->p12 = ads7828_read_digit(&(a->ads2), ADS7828_CHANNEL_5_COM);
 
     return 0;
+}
+
+uint8_t ALPHA_READ_KEYS(Alpha *a)
+{
+    a->k1 = HAL_GPIO_ReadPin(K1_GPIO_Port, K1_Pin);
+}
+
+uint8_t ALPHA_READ_BW(Alpha *a)
+{
+    a->bw1 = HAL_GPIO_ReadPin(BW1_GPIO_Port, BW1_Pin);
 }
 
 uint8_t ALPHA_READ_LOADCELL(Alpha *a)
@@ -203,24 +217,24 @@ uint8_t ALPHA_SEND_10HZ(Alpha *a)
     XPLINK_PACK(packet, &pkt4);
     dmasend(packet, 12);
 
-    // send accelerometer data
-
-    xp_packet_t pkt = {0};
-
-    pkt.data = ((uint64_t)(uint16_t)a->rot.x << 32) |
-               ((uint64_t)(uint16_t)a->rot.y << 16) |
-               ((uint64_t)(uint16_t)a->rot.z);
-
-    pkt.type = ACC;
-
-    XPLINK_PACK(packet, &pkt);
-    dmasend(packet, 12);
+    // send keys & burn wire data
+    xp_packet_t pkt;
+    pkt.data = a->k1 << 8 | a->bw1;
+    pkt.type = SWITCHES;
 
     return 0;
 }
 
 uint8_t Alpha_Send_100HZ(Alpha *a)
 {
+
+    // send the current state
+    xp_packet_t pkt = {0};
+    pkt.data = a->state;
+    pkt.type = XP_STATE;
+    uint8_t packet[12];
+    XPLINK_PACK(packet, &pkt);
+    dmasend(packet, 12);
 
     // send pressure data
     uint16_t vals[] = {a->p1,
@@ -252,7 +266,6 @@ uint8_t Alpha_Send_100HZ(Alpha *a)
     xp_packet_t pkt_lc;
     pkt_lc.data = (uint64_t)(a->load_cell_value);
     pkt_lc.type = THRUST;
-    uint8_t packet[12];
     XPLINK_PACK(packet, &pkt_lc);
     dmasend(packet, 12);
 
@@ -261,6 +274,14 @@ uint8_t Alpha_Send_100HZ(Alpha *a)
     pkt_s.data = a->s1 << 24 | a->s2 << 16 | a->s3 << 8 | a->s4;
     pkt_s.type = SOLENOID;
     XPLINK_PACK(packet, &pkt_s);
+    dmasend(packet, 12);
+
+    // send accelerometer data
+    pkt.data = ((uint64_t)(uint16_t)a->rot.x << 32) |
+               ((uint64_t)(uint16_t)a->rot.y << 16) |
+               ((uint64_t)(uint16_t)a->rot.z);
+    pkt.type = ACC;
+    XPLINK_PACK(packet, &pkt);
     dmasend(packet, 12);
 
     return 0;

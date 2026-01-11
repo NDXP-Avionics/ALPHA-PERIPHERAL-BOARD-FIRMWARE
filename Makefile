@@ -66,6 +66,7 @@ Core/Src/byte_queue.c \
 Core/Src/uart_rx.c \
 Core/Src/ADS1231.c \
 Core/Src/BNO055.c \
+Core/Src/state_machine.c \
 
 # ASM sources
 ASM_SOURCES =  \

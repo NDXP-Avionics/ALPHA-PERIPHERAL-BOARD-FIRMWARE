@@ -6,6 +6,7 @@
 #include "ADS7828.h"
 #include "ADS1231.h"
 #include "BNO055.h"
+#include "state_machine.h"
 
 typedef struct rotation
 {
@@ -16,7 +17,7 @@ typedef struct rotation
 
 } rotation;
 
-typedef struct
+typedef struct Alpha
 {
 
     // Temp sensor handles
@@ -53,11 +54,20 @@ typedef struct
     ADS1231_t load_cell;
     int32_t load_cell_value;
 
+    // pyro
+    uint8_t pyro1;
+
     // solenoids
     uint8_t s1;
     uint8_t s2;
     uint8_t s3;
     uint8_t s4;
+
+    // keys
+    uint8_t k1;
+
+    // Burn Wire
+    uint8_t bw1;
 
     // accelerometer
     struct bno055_t bno055;
@@ -65,6 +75,9 @@ typedef struct
 
     // state variables
     uint8_t going;
+
+    // global state variable
+    STATE state;
 
 } Alpha;
 
@@ -78,9 +91,15 @@ uint8_t ALPHA_SENSORS_INIT(Alpha *a);
 
 uint8_t ALPHA_COMMS_INIT(Alpha *a);
 
+uint8_t ALPHA_SET_PYRO(Alpha *a, uint8_t val);
+
 uint8_t ALPHA_READ_TEMP(Alpha *a);
 
 uint8_t ALPHA_READ_PRESSURE(Alpha *a);
+
+uint8_t ALPHA_READ_KEYS(Alpha *a);
+
+uint8_t ALPHA_READ_BW(Alpha *a);
 
 uint8_t ALPHA_READ_LOADCELL(Alpha *a);
 

@@ -14,8 +14,6 @@ int app_main()
     // initialize alpha
     Alpha A;
 
-    HAL_Delay(1000);
-
     ALPHA_STATE_INIT(&A);
     ALPHA_SENSORS_INIT(&A);
 
@@ -35,11 +33,15 @@ int app_main()
             // check rx
             ALPHA_RX(&A);
 
+            // run state machine
+            SM_ADVANCE_STATE(&A);
+
             if (A.going)
             {
                 // Pressure Sensors
                 ALPHA_READ_PRESSURE(&A);
                 ALPHA_READ_LOADCELL(&A);
+                ALPHA_READ_ACC(&A);
                 Alpha_Send_100HZ(&A);
             }
         }
@@ -55,8 +57,11 @@ int app_main()
             {
                 // Read sensors
                 ALPHA_READ_TEMP(&A);
-                ALPHA_READ_ACC(&A);
-                // Send Data
+                // read keys
+                ALPHA_READ_KEYS(&A);
+                // read burn wire
+                ALPHA_READ_BW(&A);
+                //  Send Data
                 ALPHA_SEND_10HZ(&A);
             }
         }

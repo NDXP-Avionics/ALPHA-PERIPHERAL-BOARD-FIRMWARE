@@ -3,6 +3,7 @@
 #include "dmacirc.h"
 #include "byte_queue.h"
 #include "Alpha.h"
+#include "state_machine.h"
 
 UART_HandleTypeDef *handle;
 uint8_t RX_BUFFER[1];
@@ -21,8 +22,8 @@ typedef enum COMMANDS
     S3_OFF,
     S4_ON,
     S4_OFF,
-    PYRO_ON,
-    PYRO_OFF,
+    FIRE,
+    RST,
 } COMMANDS;
 
 void RX_HANDLER(Alpha *a)
@@ -50,30 +51,35 @@ void RX_HANDLER(Alpha *a)
                 case S1_ON:
                     ALPHA_SET_SOLENOID(a, 1, 1);
                     break;
-
                 case S1_OFF:
                     ALPHA_SET_SOLENOID(a, 1, 0);
                     break;
                 case S2_ON:
                     ALPHA_SET_SOLENOID(a, 2, 1);
                     break;
-
                 case S2_OFF:
                     ALPHA_SET_SOLENOID(a, 2, 0);
                     break;
                 case S3_ON:
                     ALPHA_SET_SOLENOID(a, 3, 1);
                     break;
-
                 case S3_OFF:
                     ALPHA_SET_SOLENOID(a, 3, 0);
                     break;
                 case S4_ON:
                     ALPHA_SET_SOLENOID(a, 4, 1);
                     break;
-
                 case S4_OFF:
                     ALPHA_SET_SOLENOID(a, 4, 0);
+                    break;
+                case FIRE:
+                    if (a->state == STANDBY)
+                    {
+                        SM_SET_STATE(a, FIRE_RECIEVED);
+                    }
+                    break;
+                case RST:
+                    SM_SET_STATE(a, STANDBY);
                     break;
                 default:
                     break;
