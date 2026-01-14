@@ -75,7 +75,7 @@ void RX_HANDLER(Alpha *a)
                 case FIRE:
                     if (a->state == STANDBY)
                     {
-                        SM_SET_STATE(a, FIRE_RECIEVED);
+                        SM_SET_STATE(a, FIRE_RECEIVED);
                     }
                     break;
                 case RST:

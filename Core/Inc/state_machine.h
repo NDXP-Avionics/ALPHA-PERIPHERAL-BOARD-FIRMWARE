@@ -8,7 +8,7 @@ typedef struct Alpha Alpha;
 typedef enum STATE
 {
     STANDBY,
-    FIRE_RECIEVED,
+    FIRE_RECEIVED,
     IGNITE,
     BURNING,
     COOLDOWN,

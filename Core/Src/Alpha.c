@@ -4,6 +4,8 @@
 #include "uart_rx.h"
 #include "state_machine.h"
 
+#define TESTDATA false
+
 uint8_t ALPHA_STATE_INIT(Alpha *a)
 {
     a->going = 1;
@@ -118,6 +120,15 @@ uint8_t ALPHA_READ_TEMP(Alpha *a)
     a->temp_3 = max31856_read_thermocouple(&(a->tc3), 3);
     a->temp_4 = max31856_read_thermocouple(&(a->tc4), 4);
 
+    if (TESTDATA)
+    {
+        int testtemp = 500;
+        a->temp_1 = testtemp;
+        a->temp_2 = testtemp;
+        a->temp_3 = testtemp;
+        a->temp_4 = testtemp;
+    }
+
     return 0;
 }
 
@@ -130,13 +141,29 @@ uint8_t ALPHA_READ_PRESSURE(Alpha *a)
     a->p4 = ads7828_read_digit(&(a->ads1), ADS7828_CHANNEL_5_COM);
     a->p5 = ads7828_read_digit(&(a->ads1), ADS7828_CHANNEL_6_COM);
     a->p6 = ads7828_read_digit(&(a->ads1), ADS7828_CHANNEL_7_COM);
-
     a->p7 = ads7828_read_digit(&(a->ads2), ADS7828_CHANNEL_0_COM);
     a->p8 = ads7828_read_digit(&(a->ads2), ADS7828_CHANNEL_1_COM);
     a->p9 = ads7828_read_digit(&(a->ads2), ADS7828_CHANNEL_2_COM);
     a->p10 = ads7828_read_digit(&(a->ads2), ADS7828_CHANNEL_3_COM);
     a->p11 = ads7828_read_digit(&(a->ads2), ADS7828_CHANNEL_4_COM);
     a->p12 = ads7828_read_digit(&(a->ads2), ADS7828_CHANNEL_5_COM);
+
+    if (TESTDATA)
+    {
+        int testpressure = 600;
+        a->p1 = testpressure;
+        a->p2 = testpressure;
+        a->p3 = testpressure;
+        a->p4 = testpressure;
+        a->p5 = testpressure;
+        a->p6 = testpressure;
+        a->p7 = testpressure;
+        a->p8 = testpressure;
+        a->p9 = testpressure;
+        a->p10 = testpressure;
+        a->p11 = testpressure;
+        a->p12 = testpressure;
+    }
 
     return 0;
 }

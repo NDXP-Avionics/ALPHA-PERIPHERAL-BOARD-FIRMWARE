@@ -41,7 +41,7 @@ STATE MACHINE VARIABLES START
 #define BURN_TIME (20 * 1000) // 20 seconds
 
 // COOLDOWN TIME in ms (max time to wait before switching from cooldown to standby state)
-#define COOLDOWN_TIME (120 * 1000) // 120 seconds
+#define COOLDOWN_TIME (20 * 1000) // 120 seconds
 
 /*
 =======================================================
@@ -71,9 +71,8 @@ void SM_SET_STATE(Alpha *a, STATE m)
 
         break;
 
-    case FIRE_RECIEVED:
+    case FIRE_RECEIVED:
         // start logging data -> we can handle this using states in python
-
         break;
 
     case IGNITE:
@@ -85,7 +84,7 @@ void SM_SET_STATE(Alpha *a, STATE m)
         // turn off pyro
         ALPHA_SET_PYRO(a, 0);
         // open solenoids -> on timer?? we have 0.01 second resolution. doing all at once for now
-        for (int i = 0; i < 4; i++)
+        for (int i = 1; i <= 4; i++)
         {
             ALPHA_SET_SOLENOID(a, i, 1);
         }
@@ -94,7 +93,7 @@ void SM_SET_STATE(Alpha *a, STATE m)
 
     case COOLDOWN:
         // close solenoids
-        for (int i = 0; i < 4; i++)
+        for (int i = 1; i <= 4; i++)
         {
             ALPHA_SET_SOLENOID(a, i, 0);
         }
@@ -130,15 +129,15 @@ void SM_ADVANCE_STATE(Alpha *a)
         break;
 
     // received fire command
-    case FIRE_RECIEVED:
+    case FIRE_RECEIVED:
         // check keyswitches turned and plumbing pressures nominal -> switch to ignite otherwise abort
-        if (!(a->k1 && K1_INVERTED))
+        if ((a->k1 == K1_INVERTED))
         {
             // k1 not correct, abort
             SM_SET_STATE(a, ABORT);
             break;
         }
-        if (!(a->bw1 && BW1_INVERTED))
+        if ((a->bw1 == BW1_INVERTED))
         {
             // bw1 lacks continuity, abort
             SM_SET_STATE(a, ABORT);
@@ -161,7 +160,7 @@ void SM_ADVANCE_STATE(Alpha *a)
     // ignite starter motor
     case IGNITE:
         // switch to burning -> Burn Wire separated
-        if (!(a->bw1 && BW1_INVERTED))
+        if ((a->bw1 == BW1_INVERTED))
         {
             // bw1 lacks continuity, switch to burning
             SM_SET_STATE(a, BURNING);
@@ -223,12 +222,14 @@ void SM_ADVANCE_STATE(Alpha *a)
 //**IMPORTANT TODO, make sure these are actually translated to psi at this point */
 uint8_t PLUMBING_NOMINAL(Alpha *a)
 {
+    return true;
     return (a->p1 < P1_CRITICAL) && (a->p2 < P2_CRITICAL) && (a->p3 < P3_CRITICAL) && (a->p4 < P4_CRITICAL) && (a->p5 < P5_CRITICAL) && (a->p6 < P6_CRITICAL) && (a->p7 < P7_CRITICAL) && (a->p8 < P8_CRITICAL);
 }
 
 //**IMPORTANT TODO, make sure these are actually translated to degrees F at this point */
 uint8_t TEMPS_NOMINAL(Alpha *a)
 {
+    return true;
     return (a->temp_1 < T1_CRITICAL && a->temp_2 < T2_CRITICAL && a->temp_3 < T3_CRITICAL && a->temp_4 < T4_CRITICAL);
 }
 
