@@ -107,8 +107,6 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 {
     if (huart->Instance == handle->Instance)
     {
-        // The HAL usually clears the flags automatically when calling this,
-        // or when you call Receive_IT again.
         HAL_UART_Receive_IT(handle, RX_BUFFER, 1);
     }
 }
@@ -119,9 +117,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
     if (huart->Instance == handle->Instance) // Check if the interrupt belongs to your UART
     {
 
-        // Re-enable the UART receive interrupt for the next byte
-
-        // only read data if it has been 0.5 seconds since plugging in
+                // only read data if it has been 0.5 seconds since plugging in
         if ((HAL_GetTick() - start_time) > 500)
         {
             byte_queue_push(&q, RX_BUFFER[0]);
