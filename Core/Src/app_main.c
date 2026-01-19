@@ -23,10 +23,10 @@ int app_main()
     {
 
         // 100 Hz loop
-        if (HAL_GetTick() - last_t1 > 10)
+        if (HAL_GetTick() - last_t1 >= 10)
         {
             // reset timer
-            last_t1 = HAL_GetTick();
+            last_t1 += 10;
             HAL_GPIO_TogglePin(LED3_GPIO_Port, LED3_Pin);
 
             // check rx
@@ -49,10 +49,10 @@ int app_main()
         }
 
         // 10 Hz loop
-        if (HAL_GetTick() - last_t2 > 100)
+        if (HAL_GetTick() - last_t2 >= 100)
         {
             // reset timer
-            last_t2 = HAL_GetTick();
+            last_t2 += 100;
             HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
 
             if (A.going)
@@ -69,10 +69,10 @@ int app_main()
         }
 
         // 0.75 Hz loop
-        if (HAL_GetTick() - last_t3 > 750)
+        if (HAL_GetTick() - last_t3 >= 750)
         {
             // reset timer
-            last_t3 = HAL_GetTick();
+            last_t3 += 750;
 
             HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
         }
