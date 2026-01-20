@@ -5,7 +5,7 @@
 
 </p>
 
-<h4 align="center">This is the repository for the FIRMWARE DESIGN ONLY. Hardware for the board can be found <a href="https://github.com/1112luke/ALPHA_PERIPHERAL_BOARD">here</a></h4>
+<h4 align="center">This is the repository for the FIRMWARE DESIGN ONLY. Hardware for the board can be found <a href="https://github.com/NDXP-Avionics/ALPHA-PERIPHERAL-BOARD">here</a></h4>
 
 ## Introduction
 
