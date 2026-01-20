@@ -17,10 +17,21 @@ STATE MACHINE VARIABLES START
 #define P2_CRITICAL 500
 #define P3_CRITICAL 500
 #define P4_CRITICAL 500
+
 #define P5_CRITICAL 500
 #define P6_CRITICAL 500
 #define P7_CRITICAL 500
 #define P8_CRITICAL 500
+
+// Burn end pressures in psi
+#define P1_BURN_END 500
+#define P2_BURN_END 500
+#define P3_BURN_END 500
+#define P4_BURN_END 500
+#define P5_BURN_END 500
+#define P6_BURN_END 500
+#define P7_BURN_END 500
+#define P8_BURN_END 500
 
 // Critical Temps in F
 #define T1_CRITICAL 300
@@ -185,6 +196,12 @@ void SM_ADVANCE_STATE(Alpha *a)
             break;
         }
 
+        // switch to cooldown if pressures < burn end
+        if (PLUMBING_BURN_END(a))
+        {
+            SM_SET_STATE(a, COOLDOWN);
+        }
+
         // switch to abort if plumbing pressure or temps critical
         if ((!PLUMBING_NOMINAL(a)) || (!TEMPS_NOMINAL(a)))
         {
@@ -224,6 +241,13 @@ uint8_t PLUMBING_NOMINAL(Alpha *a)
 {
     return true;
     return (a->p1 < P1_CRITICAL) && (a->p2 < P2_CRITICAL) && (a->p3 < P3_CRITICAL) && (a->p4 < P4_CRITICAL) && (a->p5 < P5_CRITICAL) && (a->p6 < P6_CRITICAL) && (a->p7 < P7_CRITICAL) && (a->p8 < P8_CRITICAL);
+}
+
+//**IMPORTANT TODO, make sure these are actually translated to psi at this point */
+uint8_t PLUMBING_BURN_END(Alpha *a)
+{
+    return false;
+    return (a->p1 < P1_BURN_END) && (a->p2 < P2_BURN_END) && (a->p3 < P3_BURN_END) && (a->p4 < P4_BURN_END) && (a->p5 < P5_BURN_END) && (a->p6 < P6_BURN_END) && (a->p7 < P7_BURN_END) && (a->p8 < P8_BURN_END);
 }
 
 //**IMPORTANT TODO, make sure these are actually translated to degrees F at this point */

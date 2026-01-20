@@ -6,11 +6,10 @@
 #include "state_machine.h"
 
 UART_HandleTypeDef *handle;
-uint8_t RX_BUFFER[1];
+uint8_t RX_BUFFER[200];
+uint32_t rd_ptr = 0;
 
 byte_queue_t q;
-
-static uint32_t start_time;
 
 typedef enum COMMANDS
 {
@@ -30,19 +29,20 @@ void RX_HANDLER(Alpha *a)
 {
 
     static xp_packet_t pkt;
-    static int curr;
 
-    while ((curr = byte_queue_pop(&q)) > -1)
+    uint32_t remaining = __HAL_DMA_GET_COUNTER(handle->hdmarx);
+    uint32_t wr_ptr = 200 - remaining;
+
+    // return if no new data
+    if (rd_ptr == wr_ptr)
+        return;
+
+    // read while data in buffer
+    while (rd_ptr != (200 - __HAL_DMA_GET_COUNTER(handle->hdmarx)))
     {
-
-        if (XPLINK_UNPACK(&pkt, (uint8_t)curr))
+        // unpack
+        if (XPLINK_UNPACK(&pkt, RX_BUFFER[rd_ptr]))
         {
-            // small delay to fix bug
-            uint32_t cycles = 200 * (SystemCoreClock / 1000000);
-            while (cycles--)
-            {
-                __NOP(); // No operation - one CPU cycle
-            }
 
             if (pkt.type == CMD)
             {
@@ -86,43 +86,17 @@ void RX_HANDLER(Alpha *a)
                 }
             }
         }
+
+        // Increment and Wrap
+        rd_ptr = (rd_ptr + 1) % 200;
     }
 }
 
 void uart_rx_init(UART_HandleTypeDef *n)
 {
 
+    // DMA solution
     handle = n;
-    byte_queue_init(&q);
-    HAL_UART_Receive_IT(handle, RX_BUFFER, 1);
-
-    __HAL_UART_CLEAR_OREFLAG(handle);
-    __HAL_UART_CLEAR_NEFLAG(handle);
-    __HAL_UART_CLEAR_FEFLAG(handle);
-
-    start_time = HAL_GetTick();
-}
-
-void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
-{
-    if (huart->Instance == handle->Instance)
-    {
-        HAL_UART_Receive_IT(handle, RX_BUFFER, 1);
-    }
-}
-
-// handle uart interrupt
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-{
-    if (huart->Instance == handle->Instance) // Check if the interrupt belongs to your UART
-    {
-
-                // only read data if it has been 0.5 seconds since plugging in
-        if ((HAL_GetTick() - start_time) > 500)
-        {
-            byte_queue_push(&q, RX_BUFFER[0]);
-        }
-
-        HAL_UART_Receive_IT(handle, RX_BUFFER, 1);
-    }
+    // initialize a DMA receive
+    HAL_UART_Receive_DMA(n, RX_BUFFER, 200);
 }

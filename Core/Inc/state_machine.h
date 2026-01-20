@@ -21,6 +21,8 @@ void SM_ADVANCE_STATE(Alpha *a);
 
 uint8_t PLUMBING_NOMINAL(Alpha *a);
 
+uint8_t PLUMBING_BURN_END(Alpha *a);
+
 uint8_t TEMPS_NOMINAL(Alpha *a);
 
 uint8_t TEMPS_SAFE(Alpha *a);

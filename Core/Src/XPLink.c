@@ -67,6 +67,11 @@ uint8_t XPLINK_UNPACK(xp_packet_t *output, uint8_t byte)
         PREV_END = 0;
     }
 
+    if (PREV_END == 0 && BUFF_HEAD == 0 && byte != END_BYTE) // return instantly if we havent yet received an end byte
+    {
+        return 0;
+    }
+
     // check for start of new packet
     if (PREV_END)
     {
@@ -156,6 +161,10 @@ uint8_t *COBS_UNPACK(uint8_t *out, uint8_t *in, uint8_t insize, uint8_t end_byte
 
     while (read_step != end_byte)
     {
+        // prevent crashing on garbled data
+        if (read_step == 0 || (read_head + read_step) > insize || write_head >= 11)
+            break;
+
         memcpy(&out[write_head], &in[read_head + 1], read_step - 1);
         // increment
         read_head += read_step;
