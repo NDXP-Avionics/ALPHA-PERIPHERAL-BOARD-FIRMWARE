@@ -23,6 +23,7 @@ typedef enum COMMANDS
     S4_OFF,
     FIRE,
     RST,
+    ABRT
 } COMMANDS;
 
 void RX_HANDLER(Alpha *a)
@@ -80,6 +81,9 @@ void RX_HANDLER(Alpha *a)
                     break;
                 case RST:
                     SM_SET_STATE(a, STANDBY);
+                    break;
+                case ABRT:
+                    SM_SET_STATE(a, ABORT);
                     break;
                 default:
                     break;
