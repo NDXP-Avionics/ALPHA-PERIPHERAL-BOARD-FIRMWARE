@@ -79,8 +79,8 @@ void RX_HANDLER(Alpha *a)
                         SM_SET_STATE(a, FIRE_RECEIVED);
                     }
                     break;
-                case RST:
-                    SM_SET_STATE(a, STANDBY);
+                case ABRT:
+                    SM_SET_STATE(a, ABORT);
                     break;
                 case ABRT:
                     SM_SET_STATE(a, ABORT);
