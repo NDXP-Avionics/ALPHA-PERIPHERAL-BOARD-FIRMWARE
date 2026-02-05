@@ -8,7 +8,7 @@ STATE MACHINE VARIABLES START
 =======================================================
 */
 
-// all variables times 1e5 because all values are stored to avoid floating point math */
+// all variables times 1e5; all values are stored this way to avoid floating point math */
 
 // contact polarity
 #define K1_INVERTED false
@@ -240,19 +240,19 @@ void SM_ADVANCE_STATE(Alpha *a)
 
 uint8_t PLUMBING_NOMINAL(Alpha *a)
 {
-    return true;
+    // return true;
     return (a->p1 < P1_CRITICAL) && (a->p2 < P2_CRITICAL) && (a->p3 < P3_CRITICAL) && (a->p4 < P4_CRITICAL) && (a->p5 < P5_CRITICAL) && (a->p6 < P6_CRITICAL) && (a->p7 < P7_CRITICAL) && (a->p8 < P8_CRITICAL);
 }
 
 uint8_t PLUMBING_BURN_END(Alpha *a)
 {
-    return false;
+    // return false;
     return (a->p1 < P1_BURN_END) && (a->p2 < P2_BURN_END) && (a->p3 < P3_BURN_END) && (a->p4 < P4_BURN_END) && (a->p5 < P5_BURN_END) && (a->p6 < P6_BURN_END) && (a->p7 < P7_BURN_END) && (a->p8 < P8_BURN_END);
 }
 
 uint8_t TEMPS_NOMINAL(Alpha *a)
 {
-    return true;
+    // return true;
     return (a->temp_1 < T1_CRITICAL && a->temp_2 < T2_CRITICAL && a->temp_3 < T3_CRITICAL && a->temp_4 < T4_CRITICAL);
 }
 
