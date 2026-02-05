@@ -22,6 +22,10 @@ uint8_t ALPHA_STATE_INIT(Alpha *a)
 
 uint8_t ALPHA_SENSORS_INIT(Alpha *a)
 {
+
+    // seta all sensors to not attatched
+    a->attatched_sensors = 0x00;
+
     // initialize TC
     a->tc1.spi_tx = HAL_SPI_Transmit;
     a->tc1.spi_rx = HAL_SPI_Receive;
@@ -87,6 +91,7 @@ uint8_t ALPHA_SENSORS_INIT(Alpha *a)
 
         bno055_set_operation_mode(BNO055_OPERATION_MODE_NDOF);
         HAL_Delay(100);
+        a->attatched_sensors |= (1 << SENSOR_ACC);
     }
 
     return 0;
@@ -114,15 +119,21 @@ uint8_t ALPHA_SET_PYRO(Alpha *a, uint8_t val)
 uint8_t ALPHA_READ_TEMP(Alpha *a)
 {
 
-    // read and send temp data
-    a->temp_1 = max31856_read_thermocouple(&(a->tc1), 1);
-    a->temp_2 = max31856_read_thermocouple(&(a->tc2), 2);
-    a->temp_3 = max31856_read_thermocouple(&(a->tc3), 3);
-    a->temp_4 = max31856_read_thermocouple(&(a->tc4), 4);
+    // read raw temp data (in degrees C * 1e4)
+    uint32_t temp_1_raw = max31856_read_thermocouple(&(a->tc1), 1);
+    uint32_t temp_2_raw = max31856_read_thermocouple(&(a->tc2), 2);
+    uint32_t temp_3_raw = max31856_read_thermocouple(&(a->tc3), 3);
+    uint32_t temp_4_raw = max31856_read_thermocouple(&(a->tc4), 4);
+
+    // convert to degrees F * 1e5
+    a->temp_1 = (uint32_t)(((uint64_t)temp_1_raw * 9 * 10) / 5 + 3200000UL);
+    a->temp_2 = (uint32_t)(((uint64_t)temp_2_raw * 9 * 10) / 5 + 3200000UL);
+    a->temp_3 = (uint32_t)(((uint64_t)temp_3_raw * 9 * 10) / 5 + 3200000UL);
+    a->temp_4 = (uint32_t)(((uint64_t)temp_4_raw * 9 * 10) / 5 + 3200000UL);
 
     if (TESTDATA)
     {
-        int testtemp = 500;
+        int testtemp = 500e5;
         a->temp_1 = testtemp;
         a->temp_2 = testtemp;
         a->temp_3 = testtemp;
@@ -135,22 +146,36 @@ uint8_t ALPHA_READ_TEMP(Alpha *a)
 uint8_t ALPHA_READ_PRESSURE(Alpha *a)
 {
 
-    a->p1 = ads7828_read_digit(&(a->ads1), ADS7828_CHANNEL_2_COM);
-    a->p2 = ads7828_read_digit(&(a->ads1), ADS7828_CHANNEL_3_COM);
-    a->p3 = ads7828_read_digit(&(a->ads1), ADS7828_CHANNEL_4_COM);
-    a->p4 = ads7828_read_digit(&(a->ads1), ADS7828_CHANNEL_5_COM);
-    a->p5 = ads7828_read_digit(&(a->ads1), ADS7828_CHANNEL_6_COM);
-    a->p6 = ads7828_read_digit(&(a->ads1), ADS7828_CHANNEL_7_COM);
-    a->p7 = ads7828_read_digit(&(a->ads2), ADS7828_CHANNEL_0_COM);
-    a->p8 = ads7828_read_digit(&(a->ads2), ADS7828_CHANNEL_1_COM);
-    a->p9 = ads7828_read_digit(&(a->ads2), ADS7828_CHANNEL_2_COM);
-    a->p10 = ads7828_read_digit(&(a->ads2), ADS7828_CHANNEL_3_COM);
-    a->p11 = ads7828_read_digit(&(a->ads2), ADS7828_CHANNEL_4_COM);
-    a->p12 = ads7828_read_digit(&(a->ads2), ADS7828_CHANNEL_5_COM);
+    uint32_t p_raw_1 = ads7828_read_digit(&(a->ads1), ADS7828_CHANNEL_2_COM);
+    uint32_t p_raw_2 = ads7828_read_digit(&(a->ads1), ADS7828_CHANNEL_3_COM);
+    uint32_t p_raw_3 = ads7828_read_digit(&(a->ads1), ADS7828_CHANNEL_4_COM);
+    uint32_t p_raw_4 = ads7828_read_digit(&(a->ads1), ADS7828_CHANNEL_5_COM);
+    uint32_t p_raw_5 = ads7828_read_digit(&(a->ads1), ADS7828_CHANNEL_6_COM);
+    uint32_t p_raw_6 = ads7828_read_digit(&(a->ads1), ADS7828_CHANNEL_7_COM);
+    uint32_t p_raw_7 = ads7828_read_digit(&(a->ads2), ADS7828_CHANNEL_0_COM);
+    uint32_t p_raw_8 = ads7828_read_digit(&(a->ads2), ADS7828_CHANNEL_1_COM);
+    uint32_t p_raw_9 = ads7828_read_digit(&(a->ads2), ADS7828_CHANNEL_2_COM);
+    uint32_t p_raw_10 = ads7828_read_digit(&(a->ads2), ADS7828_CHANNEL_3_COM);
+    uint32_t p_raw_11 = ads7828_read_digit(&(a->ads2), ADS7828_CHANNEL_4_COM);
+    uint32_t p_raw_12 = ads7828_read_digit(&(a->ads2), ADS7828_CHANNEL_5_COM);
+
+    // convert to PSI * 1e5
+    a->p1 = (uint32_t)((((int64_t)p_raw_1 * 5) - 2048) * (1000 * 100000LL / 4) / 4096);
+    a->p2 = (uint32_t)((((int64_t)p_raw_2 * 5) - 2048) * (1000 * 100000LL / 4) / 4096);
+    a->p3 = (uint32_t)((((int64_t)p_raw_3 * 5) - 2048) * (1000 * 100000LL / 4) / 4096);
+    a->p4 = (uint32_t)((((int64_t)p_raw_4 * 5) - 2048) * (5000 * 100000LL / 4) / 4096); // 5000 for different sensor
+    a->p5 = (uint32_t)((((int64_t)p_raw_5 * 5) - 2048) * (1000 * 100000LL / 4) / 4096);
+    a->p6 = (uint32_t)((((int64_t)p_raw_6 * 5) - 2048) * (1000 * 100000LL / 4) / 4096);
+    a->p7 = (uint32_t)((((int64_t)p_raw_7 * 5) - 2048) * (1000 * 100000LL / 4) / 4096);
+    a->p8 = (uint32_t)((((int64_t)p_raw_8 * 5) - 2048) * (1000 * 100000LL / 4) / 4096);
+    a->p9 = (uint32_t)((((int64_t)p_raw_9 * 5) - 2048) * (1000 * 100000LL / 4) / 4096);
+    a->p10 = (uint32_t)((((int64_t)p_raw_10 * 5) - 2048) * (1000 * 100000LL / 4) / 4096);
+    a->p11 = (uint32_t)((((int64_t)p_raw_11 * 5) - 2048) * (1000 * 100000LL / 4) / 4096);
+    a->p12 = (uint32_t)((((int64_t)p_raw_12 * 5) - 2048) * (1000 * 100000LL / 4) / 4096);
 
     if (TESTDATA)
     {
-        int testpressure = 600;
+        int testpressure = 600e5;
         a->p1 = testpressure;
         a->p2 = testpressure;
         a->p3 = testpressure;
@@ -195,7 +220,8 @@ uint8_t ALPHA_READ_LOADCELL(Alpha *a)
 
     if (result == ADS1231_SUCCESS)
     {
-        a->load_cell_value = value;
+        // load cell value * 1e5
+        a->load_cell_value = (int32_t)(((int64_t)value * 250000000) / 32212256);
     }
 
     return result;
@@ -203,6 +229,13 @@ uint8_t ALPHA_READ_LOADCELL(Alpha *a)
 
 uint8_t ALPHA_READ_ACC(Alpha *a) // Still named ACC in your code
 {
+
+    // check if sensor is attatched
+    if (!(a->attatched_sensors & (1 << SENSOR_ACC)))
+    {
+        return 0;
+    }
+
     struct bno055_euler_t euler;
 
     if (bno055_read_euler_hrp(&euler) != BNO055_SUCCESS)
@@ -273,7 +306,7 @@ uint8_t Alpha_Send_100HZ(Alpha *a)
     dmasend(packet, 12);
 
     // send pressure data
-    uint16_t vals[] = {a->p1,
+    uint32_t vals[] = {a->p1,
                        a->p2,
                        a->p3,
                        a->p4,

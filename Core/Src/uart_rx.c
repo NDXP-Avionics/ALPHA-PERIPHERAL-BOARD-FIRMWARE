@@ -23,7 +23,7 @@ typedef enum COMMANDS
     S4_OFF,
     FIRE,
     RST,
-    ABRT
+    ABRT,
 } COMMANDS;
 
 void RX_HANDLER(Alpha *a)

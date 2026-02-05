@@ -17,6 +17,11 @@ typedef struct rotation
 
 } rotation;
 
+typedef enum sensors
+{
+    SENSOR_ACC,
+} sensors;
+
 typedef struct Alpha
 {
 
@@ -37,18 +42,18 @@ typedef struct Alpha
     uint32_t temp_4;
 
     // Temp Pressure
-    uint16_t p1;
-    uint16_t p2;
-    uint16_t p3;
-    uint16_t p4;
-    uint16_t p5;
-    uint16_t p6;
-    uint16_t p7;
-    uint16_t p8;
-    uint16_t p9;
-    uint16_t p10;
-    uint16_t p11;
-    uint16_t p12;
+    uint32_t p1;
+    uint32_t p2;
+    uint32_t p3;
+    uint32_t p4;
+    uint32_t p5;
+    uint32_t p6;
+    uint32_t p7;
+    uint32_t p8;
+    uint32_t p9;
+    uint32_t p10;
+    uint32_t p11;
+    uint32_t p12;
 
     // load cell
     ADS1231_t load_cell;
@@ -78,6 +83,9 @@ typedef struct Alpha
 
     // global state variable
     STATE state;
+
+    // attatched sensors bitmap (used only for accelerometer at this point)
+    uint8_t attatched_sensors;
 
 } Alpha;
 

@@ -8,42 +8,44 @@ STATE MACHINE VARIABLES START
 =======================================================
 */
 
+// all variables times 1e5 because all values are stored to avoid floating point math */
+
 // contact polarity
 #define K1_INVERTED false
 #define BW1_INVERTED false
 
 // Critical pressures in psi
-#define P1_CRITICAL 500
-#define P2_CRITICAL 500
-#define P3_CRITICAL 500
-#define P4_CRITICAL 500
+#define P1_CRITICAL 500 * 1e5
+#define P2_CRITICAL 500 * 1e5
+#define P3_CRITICAL 500 * 1e5
+#define P4_CRITICAL 500 * 1e5
 
-#define P5_CRITICAL 500
-#define P6_CRITICAL 500
-#define P7_CRITICAL 500
-#define P8_CRITICAL 500
+#define P5_CRITICAL 500 * 1e5
+#define P6_CRITICAL 500 * 1e5
+#define P7_CRITICAL 500 * 1e5
+#define P8_CRITICAL 500 * 1e5
 
 // Burn end pressures in psi
-#define P1_BURN_END 500
-#define P2_BURN_END 500
-#define P3_BURN_END 500
-#define P4_BURN_END 500
-#define P5_BURN_END 500
-#define P6_BURN_END 500
-#define P7_BURN_END 500
-#define P8_BURN_END 500
+#define P1_BURN_END 500 * 1e5
+#define P2_BURN_END 500 * 1e5
+#define P3_BURN_END 500 * 1e5
+#define P4_BURN_END 500 * 1e5
+#define P5_BURN_END 500 * 1e5
+#define P6_BURN_END 500 * 1e5
+#define P7_BURN_END 500 * 1e5
+#define P8_BURN_END 500 * 1e5
 
 // Critical Temps in F
-#define T1_CRITICAL 300
-#define T2_CRITICAL 300
-#define T3_CRITICAL 300
-#define T4_CRITICAL 300
+#define T1_CRITICAL 300 * 1e5
+#define T2_CRITICAL 300 * 1e5
+#define T3_CRITICAL 300 * 1e5
+#define T4_CRITICAL 300 * 1e5
 
 // Safe to approach temps in F
-#define T1_SAFE 150
-#define T2_SAFE 150
-#define T3_SAFE 150
-#define T4_SAFE 150
+#define T1_SAFE 150 * 1e5
+#define T2_SAFE 150 * 1e5
+#define T3_SAFE 150 * 1e5
+#define T4_SAFE 150 * 1e5
 
 // Burn Wire Time Limit in ms (time from fire command to ignition to call the launch an abort)
 #define BURN_WIRE_TIME_LIMIT (5 * 1000) // 5 seconds
@@ -114,7 +116,7 @@ void SM_SET_STATE(Alpha *a, STATE m)
     case ABORT:
         // stop logging data
         // turn off solenoids
-        for (int i = 0; i < 4; i++)
+        for (int i = 1; i <= 4; i++)
         {
             ALPHA_SET_SOLENOID(a, i, 0);
         }
@@ -236,28 +238,24 @@ void SM_ADVANCE_STATE(Alpha *a)
     }
 }
 
-//**IMPORTANT TODO, make sure these are actually translated to psi at this point */
 uint8_t PLUMBING_NOMINAL(Alpha *a)
 {
     return true;
     return (a->p1 < P1_CRITICAL) && (a->p2 < P2_CRITICAL) && (a->p3 < P3_CRITICAL) && (a->p4 < P4_CRITICAL) && (a->p5 < P5_CRITICAL) && (a->p6 < P6_CRITICAL) && (a->p7 < P7_CRITICAL) && (a->p8 < P8_CRITICAL);
 }
 
-//**IMPORTANT TODO, make sure these are actually translated to psi at this point */
 uint8_t PLUMBING_BURN_END(Alpha *a)
 {
     return false;
     return (a->p1 < P1_BURN_END) && (a->p2 < P2_BURN_END) && (a->p3 < P3_BURN_END) && (a->p4 < P4_BURN_END) && (a->p5 < P5_BURN_END) && (a->p6 < P6_BURN_END) && (a->p7 < P7_BURN_END) && (a->p8 < P8_BURN_END);
 }
 
-//**IMPORTANT TODO, make sure these are actually translated to degrees F at this point */
 uint8_t TEMPS_NOMINAL(Alpha *a)
 {
     return true;
     return (a->temp_1 < T1_CRITICAL && a->temp_2 < T2_CRITICAL && a->temp_3 < T3_CRITICAL && a->temp_4 < T4_CRITICAL);
 }
 
-//**IMPORTANT TODO, make sure these are actually translated to degrees F at this point */
 uint8_t TEMPS_SAFE(Alpha *a)
 {
     return (a->temp_1 < T1_SAFE && a->temp_2 < T2_SAFE && a->temp_3 < T3_SAFE && a->temp_4 < T4_SAFE);
