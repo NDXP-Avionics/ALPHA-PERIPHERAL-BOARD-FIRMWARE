@@ -19,7 +19,7 @@ void SM_SET_STATE(Alpha *a, STATE m);
 
 void SM_ADVANCE_STATE(Alpha *a);
 
-uint8_t PLUMBING_NOMINAL(Alpha *a);
+uint8_t PRESSURES_NOMINAL(Alpha *a);
 
 uint8_t PLUMBING_BURN_END(Alpha *a);
 

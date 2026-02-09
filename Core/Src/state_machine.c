@@ -15,10 +15,10 @@ STATE MACHINE VARIABLES START
 #define BW1_INVERTED false
 
 // Critical pressures in psi
-#define P1_CRITICAL 500 * 1e5
-#define P2_CRITICAL 500 * 1e5
-#define P3_CRITICAL 500 * 1e5
-#define P4_CRITICAL 500 * 1e5
+#define P1_CRITICAL 600 * 1e5
+#define P2_CRITICAL 600 * 1e5
+#define P3_CRITICAL 550 * 1e5
+#define P4_CRITICAL 1350 * 1e5
 
 #define P5_CRITICAL 500 * 1e5
 #define P6_CRITICAL 500 * 1e5
@@ -26,14 +26,8 @@ STATE MACHINE VARIABLES START
 #define P8_CRITICAL 500 * 1e5
 
 // Burn end pressures in psi
-#define P1_BURN_END 500 * 1e5
-#define P2_BURN_END 500 * 1e5
-#define P3_BURN_END 500 * 1e5
-#define P4_BURN_END 500 * 1e5
-#define P5_BURN_END 500 * 1e5
-#define P6_BURN_END 500 * 1e5
-#define P7_BURN_END 500 * 1e5
-#define P8_BURN_END 500 * 1e5
+
+#define P4_BURN_END 1040 * 1e5
 
 // Critical Temps in F
 #define T1_CRITICAL 300 * 1e5
@@ -51,10 +45,10 @@ STATE MACHINE VARIABLES START
 #define BURN_WIRE_TIME_LIMIT (5 * 1000) // 5 seconds
 
 // BURN TIME in ms (time from burn wire breaking to cooldown sequence initiated)
-#define BURN_TIME (20 * 1000) // 20 seconds
+#define BURN_TIME (5 * 1000) // 20 seconds
 
 // COOLDOWN TIME in ms (max time to wait before switching from cooldown to standby state)
-#define COOLDOWN_TIME (20 * 1000) // 120 seconds
+#define COOLDOWN_TIME (120 * 1000) // 120 seconds
 
 /*
 =======================================================
@@ -79,9 +73,11 @@ void SM_SET_STATE(Alpha *a, STATE m)
     switch (m)
     {
     case STANDBY:
-        // stop logging data
-        // enable all services??
-
+        //Turn off all solenoids
+          for (int i = 1; i <= 4; i++)
+        {
+            ALPHA_SET_SOLENOID(a, i, 0);
+        }
         break;
 
     case FIRE_RECEIVED:
@@ -97,29 +93,28 @@ void SM_SET_STATE(Alpha *a, STATE m)
         // turn off pyro
         ALPHA_SET_PYRO(a, 0);
         // open solenoids -> on timer?? we have 0.01 second resolution. doing all at once for now
-        for (int i = 1; i <= 4; i++)
-        {
-            ALPHA_SET_SOLENOID(a, i, 1);
-        }
-
+        ALPHA_SET_SOLENOID(a,3,1);
+        ALPHA_SET_SOLENOID(a,4,1);
         break;
 
     case COOLDOWN:
-        // close solenoids
-        for (int i = 1; i <= 4; i++)
-        {
-            ALPHA_SET_SOLENOID(a, i, 0);
-        }
+        //Close SV1, SV3 and SV4 (Ethanol, Nitrous, and GOX Fuel Valves)
+        ALPHA_SET_SOLENOID(a, 1, 0);
+        ALPHA_SET_SOLENOID(a, 3, 0);
+        ALPHA_SET_SOLENOID(a, 4, 0);
 
+        //Open SV2 (Ethanol Vent Valve)
+        ALPHA_SET_SOLENOID(a, 2, 1);    
+        //Open 
         break;
 
     case ABORT:
-        // stop logging data
+       ALPHA_SET_SOLENOID(a, 1, 0); // Close Nitro valve
+       ALPHA_SET_SOLENOID(a, 3, 0); // Close Fuel valve
+       ALPHA_SET_SOLENOID(a, 2, 1); // Open vent valve
+       ALPHA_SET_SOLENOID(a, 4, 0); // Close GOX valve
         // turn off solenoids
-        for (int i = 1; i <= 4; i++)
-        {
-            ALPHA_SET_SOLENOID(a, i, 0);
-        }
+        
         // turn off pyro
         ALPHA_SET_PYRO(a, 0);
 
@@ -157,7 +152,7 @@ void SM_ADVANCE_STATE(Alpha *a)
             break;
         }
         // check plumbing pressures nominal
-        if (!PLUMBING_NOMINAL(a))
+        if (!PRESSURES_NOMINAL(a))
         {
             // plumbing not nominal, abort
             SM_SET_STATE(a, ABORT);
@@ -205,7 +200,7 @@ void SM_ADVANCE_STATE(Alpha *a)
         }
 
         // switch to abort if plumbing pressure or temps critical
-        if ((!PLUMBING_NOMINAL(a)) || (!TEMPS_NOMINAL(a)))
+        if ((!PRESSURES_NOMINAL(a)) )
         {
             SM_SET_STATE(a, ABORT);
             break;
@@ -238,7 +233,7 @@ void SM_ADVANCE_STATE(Alpha *a)
     }
 }
 
-uint8_t PLUMBING_NOMINAL(Alpha *a)
+uint8_t PRESSURES_NOMINAL(Alpha *a)
 {
     // return true;
     return (a->p1 < P1_CRITICAL) && (a->p2 < P2_CRITICAL) && (a->p3 < P3_CRITICAL) && (a->p4 < P4_CRITICAL) && (a->p5 < P5_CRITICAL) && (a->p6 < P6_CRITICAL) && (a->p7 < P7_CRITICAL) && (a->p8 < P8_CRITICAL);
@@ -247,7 +242,7 @@ uint8_t PLUMBING_NOMINAL(Alpha *a)
 uint8_t PLUMBING_BURN_END(Alpha *a)
 {
     // return false;
-    return (a->p1 < P1_BURN_END) && (a->p2 < P2_BURN_END) && (a->p3 < P3_BURN_END) && (a->p4 < P4_BURN_END) && (a->p5 < P5_BURN_END) && (a->p6 < P6_BURN_END) && (a->p7 < P7_BURN_END) && (a->p8 < P8_BURN_END);
+    return (a->p4 < P4_BURN_END);
 }
 
 uint8_t TEMPS_NOMINAL(Alpha *a)
