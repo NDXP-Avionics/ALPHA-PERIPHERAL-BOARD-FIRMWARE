@@ -29,7 +29,7 @@ STATE MACHINE VARIABLES START
 
 #define P4_BURN_END 1040 * 1e5
 
-// Critical Temps in F
+// Critical Temps in F (Currently not being used)
 #define T1_CRITICAL 300 * 1e5
 #define T2_CRITICAL 300 * 1e5
 #define T3_CRITICAL 300 * 1e5
@@ -45,7 +45,7 @@ STATE MACHINE VARIABLES START
 #define BURN_WIRE_TIME_LIMIT (5 * 1000) // 5 seconds
 
 // BURN TIME in ms (time from burn wire breaking to cooldown sequence initiated)
-#define BURN_TIME (5 * 1000) // 20 seconds
+#define BURN_TIME (5 * 1000) // 5 seconds
 
 // COOLDOWN TIME in ms (max time to wait before switching from cooldown to standby state)
 #define COOLDOWN_TIME (120 * 1000) // 120 seconds
@@ -81,7 +81,7 @@ void SM_SET_STATE(Alpha *a, STATE m)
         break;
 
     case FIRE_RECEIVED:
-        // start logging data -> we can handle this using states in python
+        // start logging data (Logging is handled by a separate python script, no data is saved on the MCU)
         break;
 
     case IGNITE:
@@ -92,7 +92,7 @@ void SM_SET_STATE(Alpha *a, STATE m)
     case BURNING:
         // turn off pyro
         ALPHA_SET_PYRO(a, 0);
-        // open solenoids -> on timer?? we have 0.01 second resolution. doing all at once for now
+        // Open primary GOX/Ethanol Valves 
         ALPHA_SET_SOLENOID(a,3,1);
         ALPHA_SET_SOLENOID(a,4,1);
         break;
@@ -124,7 +124,7 @@ void SM_SET_STATE(Alpha *a, STATE m)
     }
 }
 
-// definitions for leaving one mode to go to another, ** to be called frequently ~100hz **
+// definitions for leaving one mode to go to another, called in 100 hz loop. 
 void SM_ADVANCE_STATE(Alpha *a)
 {
 
@@ -133,28 +133,29 @@ void SM_ADVANCE_STATE(Alpha *a)
     {
     // standby, normal mode
     case STANDBY:
-        // receive fire command handled by uart_rx.c; nothing to do here
+        // This state is only exited upon recieving the fire command, which manually sets state to FIRE_RECIEVED.
         break;
 
     // received fire command
     case FIRE_RECEIVED:
-        // check keyswitches turned and plumbing pressures nominal -> switch to ignite otherwise abort
+        // If arm switch not continuous, abort 
+
         if ((a->k1 == K1_INVERTED))
         {
-            // k1 not correct, abort
             SM_SET_STATE(a, ABORT);
             break;
         }
+        // If burn wire not continuous, abort 
         if ((a->bw1 == BW1_INVERTED))
         {
-            // bw1 lacks continuity, abort
+
             SM_SET_STATE(a, ABORT);
             break;
         }
-        // check plumbing pressures nominal
+        // Abort if system pressures are not nominal 
         if (!PRESSURES_NOMINAL(a))
         {
-            // plumbing not nominal, abort
+           
             SM_SET_STATE(a, ABORT);
             break;
         }
@@ -167,21 +168,20 @@ void SM_ADVANCE_STATE(Alpha *a)
 
     // ignite starter motor
     case IGNITE:
-        // switch to burning -> Burn Wire separated
+        //Switch to burning if burn wire has been broken
         if ((a->bw1 == BW1_INVERTED))
         {
-            // bw1 lacks continuity, switch to burning
             SM_SET_STATE(a, BURNING);
             break;
         }
 
-        // switch to abort -> check burn wire time limit exceeded
+        // If the burn wire has not been broken after the BURN_WIRE_TIME_LIMIT is exceeded, abort. 
         if ((HAL_GetTick() - state_start) > BURN_WIRE_TIME_LIMIT)
         {
             SM_SET_STATE(a, ABORT);
         }
 
-        // abort command handled by uart_rx.c
+
         break;
 
     case BURNING:
@@ -193,20 +193,19 @@ void SM_ADVANCE_STATE(Alpha *a)
             break;
         }
 
-        // switch to cooldown if pressures < burn end
+        //Check if GOX pressure is below burn end threshold, switch to cooldown if true 
         if (PLUMBING_BURN_END(a))
         {
             SM_SET_STATE(a, COOLDOWN);
         }
 
-        // switch to abort if plumbing pressure or temps critical
+        // switch to abort if plumbing pressure is critical 
         if ((!PRESSURES_NOMINAL(a)) )
         {
             SM_SET_STATE(a, ABORT);
             break;
         }
 
-        // abort command handled by uart_rx.c
         break;
 
     case COOLDOWN:
@@ -228,7 +227,7 @@ void SM_ADVANCE_STATE(Alpha *a)
         break;
 
     case ABORT:
-        // switch to standby upon recieved reset command -> handled in uart_rx.c; nothing to do here
+        // ABORT can only by exited via a the RST serial command, which manually sets system state to standby.
         break;
     }
 }
