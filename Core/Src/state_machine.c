@@ -238,13 +238,14 @@ void SM_ADVANCE_STATE(Alpha *a)
 uint8_t PRESSURES_NOMINAL(Alpha *a)
 {
     // return true;
-    return (a->p1 < P1_CRITICAL) && (a->p2 < P2_CRITICAL) && (a->p3 < P3_CRITICAL) && (a->p4 < P4_CRITICAL) && (a->p5 < P5_CRITICAL) && (a->p6 < P6_CRITICAL) && (a->p7 < P7_CRITICAL) && (a->p8 < P8_CRITICAL);
+    return (a->pavg1.value < P1_CRITICAL) && (a->pavg2.value < P2_CRITICAL) && (a->pavg3.value < P3_CRITICAL) && (a->pavg4.value < P4_CRITICAL) && (a->pavg5.value < P5_CRITICAL) && (a->pavg6.value < P6_CRITICAL) && (a->pavg7.value < P7_CRITICAL) && (a->pavg8.value < P8_CRITICAL);
 }
 
 uint8_t PLUMBING_BURN_END(Alpha *a)
 {
     // return false;
-    return (a->p4 < P4_BURN_END);
+    // return (a->p4 < P4_BURN_END);
+    return (a->pavg4.value < P4_BURN_END);
 }
 
 uint8_t TEMPS_NOMINAL(Alpha *a)
