@@ -145,13 +145,7 @@ void SM_ADVANCE_STATE(Alpha *a)
             SM_SET_STATE(a, ABORT);
             break;
         }
-        // If burn wire not continuous, abort 
-        if ((a->bw1 == BW1_INVERTED))
-        {
 
-            SM_SET_STATE(a, ABORT);
-            break;
-        }
         // Abort if system pressures are not nominal 
         if (!PRESSURES_NOMINAL(a))
         {
@@ -168,18 +162,7 @@ void SM_ADVANCE_STATE(Alpha *a)
 
     // ignite starter motor
     case IGNITE:
-        //Switch to burning if burn wire has been broken
-        if ((a->bw1 == BW1_INVERTED))
-        {
-            SM_SET_STATE(a, BURNING);
-            break;
-        }
-
-        // If the burn wire has not been broken after the BURN_WIRE_TIME_LIMIT is exceeded, abort. 
-        if ((HAL_GetTick() - state_start) > BURN_WIRE_TIME_LIMIT)
-        {
-            SM_SET_STATE(a, ABORT);
-        }
+        SM_SET_STATE(a, BURNING);   
 
 
         break;
