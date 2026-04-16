@@ -17,6 +17,16 @@ typedef struct rotation
 
 } rotation;
 
+typedef struct averager
+{
+
+    uint64_t buffer[10];
+    uint64_t rolling_sum;
+    uint32_t value;
+    uint8_t index;
+
+} averager;
+
 typedef enum sensors
 {
     SENSOR_ACC,
@@ -41,7 +51,7 @@ typedef struct Alpha
     uint32_t temp_3;
     uint32_t temp_4;
 
-    // Temp Pressure
+    // Pressure Data
     uint32_t p1;
     uint32_t p2;
     uint32_t p3;
@@ -54,6 +64,20 @@ typedef struct Alpha
     uint32_t p10;
     uint32_t p11;
     uint32_t p12;
+
+    // Pressure Averages
+    averager pavg1;
+    averager pavg2;
+    averager pavg3;
+    averager pavg4;
+    averager pavg5;
+    averager pavg6;
+    averager pavg7;
+    averager pavg8;
+    averager pavg9;
+    averager pavg10;
+    averager pavg11;
+    averager pavg12;
 
     // load cell
     ADS1231_t load_cell;

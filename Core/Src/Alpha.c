@@ -108,6 +108,24 @@ uint8_t ALPHA_COMMS_INIT(Alpha *a)
     return 0;
 }
 
+void ALPHA_UPDATE_AVERAGER(averager *avg, uint64_t next_sample)
+{
+    // 1. Subtract the oldest value from the sum
+    avg->rolling_sum -= avg->buffer[avg->index];
+
+    // 2. Add the new value to the sum
+    avg->rolling_sum += next_sample;
+
+    // 3. Update the buffer with the new value
+    avg->buffer[avg->index] = next_sample;
+
+    // 4. Move the index
+    avg->index = (avg->index + 1) % 10;
+
+    // 5. Update the average (value = sum / 10)
+    avg->value = (uint32_t)(avg->rolling_sum / 10);
+}
+
 uint8_t ALPHA_SET_PYRO(Alpha *a, uint8_t val)
 {
     HAL_GPIO_WritePin(PYRO1_GPIO_Port, PYRO1_Pin, val);
@@ -172,6 +190,20 @@ uint8_t ALPHA_READ_PRESSURE(Alpha *a)
     a->p10 = (uint32_t)((((int64_t)p_raw_10 * 5) - 2048) * (1000 * 100000LL / 4) / 4096);
     a->p11 = (uint32_t)((((int64_t)p_raw_11 * 5) - 2048) * (1000 * 100000LL / 4) / 4096);
     a->p12 = (uint32_t)((((int64_t)p_raw_12 * 5) - 2048) * (1000 * 100000LL / 4) / 4096);
+
+    // update averages
+    ALPHA_UPDATE_AVERAGER(&(a->pavg1), a->p1);
+    ALPHA_UPDATE_AVERAGER(&(a->pavg2), a->p2);
+    ALPHA_UPDATE_AVERAGER(&(a->pavg3), a->p3);
+    ALPHA_UPDATE_AVERAGER(&(a->pavg4), a->p4);
+    ALPHA_UPDATE_AVERAGER(&(a->pavg5), a->p5);
+    ALPHA_UPDATE_AVERAGER(&(a->pavg6), a->p6);
+    ALPHA_UPDATE_AVERAGER(&(a->pavg7), a->p7);
+    ALPHA_UPDATE_AVERAGER(&(a->pavg8), a->p8);
+    ALPHA_UPDATE_AVERAGER(&(a->pavg9), a->p9);
+    ALPHA_UPDATE_AVERAGER(&(a->pavg10), a->p10);
+    ALPHA_UPDATE_AVERAGER(&(a->pavg11), a->p11);
+    ALPHA_UPDATE_AVERAGER(&(a->pavg12), a->p12);
 
     if (TESTDATA)
     {

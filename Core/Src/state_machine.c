@@ -27,7 +27,7 @@ STATE MACHINE VARIABLES START
 
 // Burn end pressures in psi
 
-#define P4_BURN_END 1040 * 1e5
+#define P4_BURN_END 900 * 1e5
 
 // Critical Temps in F (Currently not being used)
 #define T1_CRITICAL 300 * 1e5
@@ -73,8 +73,8 @@ void SM_SET_STATE(Alpha *a, STATE m)
     switch (m)
     {
     case STANDBY:
-        //Turn off all solenoids
-          for (int i = 1; i <= 4; i++)
+        // Turn off all solenoids
+        for (int i = 1; i <= 4; i++)
         {
             ALPHA_SET_SOLENOID(a, i, 0);
         }
@@ -92,29 +92,29 @@ void SM_SET_STATE(Alpha *a, STATE m)
     case BURNING:
         // turn off pyro
         ALPHA_SET_PYRO(a, 0);
-        // Open primary GOX/Ethanol Valves 
-        ALPHA_SET_SOLENOID(a,3,1);
-        ALPHA_SET_SOLENOID(a,4,1);
+        // Open primary GOX/Ethanol Valves
+        ALPHA_SET_SOLENOID(a, 3, 1);
+        ALPHA_SET_SOLENOID(a, 4, 1);
         break;
 
     case COOLDOWN:
-        //Close SV1, SV3 and SV4 (Ethanol, Nitrous, and GOX Fuel Valves)
+        // Close SV1, SV3 and SV4 (Ethanol, Nitrous, and GOX Fuel Valves)
         ALPHA_SET_SOLENOID(a, 1, 0);
         ALPHA_SET_SOLENOID(a, 3, 0);
         ALPHA_SET_SOLENOID(a, 4, 0);
 
-        //Open SV2 (Ethanol Vent Valve)
-        ALPHA_SET_SOLENOID(a, 2, 1);    
-        //Open 
+        // Open SV2 (Ethanol Vent Valve)
+        ALPHA_SET_SOLENOID(a, 2, 1);
+        // Open
         break;
 
     case ABORT:
-       ALPHA_SET_SOLENOID(a, 1, 0); // Close Nitro valve
-       ALPHA_SET_SOLENOID(a, 3, 0); // Close Fuel valve
-       ALPHA_SET_SOLENOID(a, 2, 1); // Open vent valve
-       ALPHA_SET_SOLENOID(a, 4, 0); // Close GOX valve
+        ALPHA_SET_SOLENOID(a, 1, 0); // Close Nitro valve
+        ALPHA_SET_SOLENOID(a, 3, 0); // Close Fuel valve
+        ALPHA_SET_SOLENOID(a, 2, 1); // Open vent valve
+        ALPHA_SET_SOLENOID(a, 4, 0); // Close GOX valve
         // turn off solenoids
-        
+
         // turn off pyro
         ALPHA_SET_PYRO(a, 0);
 
@@ -124,7 +124,7 @@ void SM_SET_STATE(Alpha *a, STATE m)
     }
 }
 
-// definitions for leaving one mode to go to another, called in 100 hz loop. 
+// definitions for leaving one mode to go to another, called in 100 hz loop.
 void SM_ADVANCE_STATE(Alpha *a)
 {
 
@@ -138,24 +138,26 @@ void SM_ADVANCE_STATE(Alpha *a)
 
     // received fire command
     case FIRE_RECEIVED:
-        // If arm switch not continuous, abort 
+        // If arm switch not continuous, abort
 
         if ((a->k1 == K1_INVERTED))
         {
             SM_SET_STATE(a, ABORT);
             break;
         }
-        // If burn wire not continuous, abort 
+        /*
+        // If burn wire not continuous, abort
         if ((a->bw1 == BW1_INVERTED))
         {
 
             SM_SET_STATE(a, ABORT);
             break;
         }
-        // Abort if system pressures are not nominal 
+        */
+        // Abort if system pressures are not nominal
         if (!PRESSURES_NOMINAL(a))
         {
-           
+
             SM_SET_STATE(a, ABORT);
             break;
         }
@@ -168,19 +170,20 @@ void SM_ADVANCE_STATE(Alpha *a)
 
     // ignite starter motor
     case IGNITE:
-        //Switch to burning if burn wire has been broken
+        /*
+        // Switch to burning if burn wire has been broken
         if ((a->bw1 == BW1_INVERTED))
         {
             SM_SET_STATE(a, BURNING);
             break;
         }
+            */
 
-        // If the burn wire has not been broken after the BURN_WIRE_TIME_LIMIT is exceeded, abort. 
+        // If the burn wire has not been broken after the BURN_WIRE_TIME_LIMIT is exceeded, abort.
         if ((HAL_GetTick() - state_start) > BURN_WIRE_TIME_LIMIT)
         {
             SM_SET_STATE(a, ABORT);
         }
-
 
         break;
 
@@ -193,14 +196,14 @@ void SM_ADVANCE_STATE(Alpha *a)
             break;
         }
 
-        //Check if GOX pressure is below burn end threshold, switch to cooldown if true 
+        // Check if GOX pressure is below burn end threshold, switch to cooldown if true
         if (PLUMBING_BURN_END(a))
         {
             SM_SET_STATE(a, COOLDOWN);
         }
 
-        // switch to abort if plumbing pressure is critical 
-        if ((!PRESSURES_NOMINAL(a)) )
+        // switch to abort if plumbing pressure is critical
+        if ((!PRESSURES_NOMINAL(a)))
         {
             SM_SET_STATE(a, ABORT);
             break;

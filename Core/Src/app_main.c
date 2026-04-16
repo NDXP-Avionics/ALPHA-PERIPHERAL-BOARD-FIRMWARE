@@ -11,7 +11,7 @@ int app_main()
     uint32_t last_t3 = HAL_GetTick();
 
     // initialize alpha
-    Alpha A;
+    Alpha A = {0};
 
     ALPHA_STATE_INIT(&A);
     ALPHA_SENSORS_INIT(&A);
