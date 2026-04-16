@@ -27,7 +27,7 @@ STATE MACHINE VARIABLES START
 
 // Burn end pressures in psi
 
-#define P4_BURN_END 1040 * 1e5
+#define P4_BURN_END 900 * 1e5
 
 // Critical Temps in F (Currently not being used)
 #define T1_CRITICAL 300 * 1e5
